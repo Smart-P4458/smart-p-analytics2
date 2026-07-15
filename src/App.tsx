@@ -1,15 +1,37 @@
+import { Routes, Route } from "react-router-dom";
+
+import Navbar from "./components/layout/NavBar";
+import Footer from "./components/layout/Footer";
+
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Projects from "./pages/Projects";
+import Services from "./pages/Services";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+
 export default function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950">
-      <div className="rounded-2xl border border-slate-700 bg-slate-900 p-10 text-center shadow-2xl">
-        <h1 className="mb-4 text-5xl font-extrabold text-blue-500">
-          Smart-P Analytics
-        </h1>
+    <>
+      <Navbar />
 
-        <p className="text-lg text-slate-300">
-          Foundation Phase Successfully Configured 🚀
-        </p>
-      </div>
-    </main>
+      <main className="min-h-screen">
+        <Routes>
+          <Route path="/" element={<Home />} />
+
+          <Route path="/about" element={<About />} />
+
+          <Route path="/projects" element={<Projects />} />
+
+          <Route path="/services" element={<Services />} />
+
+          <Route path="/contact" element={<Contact />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+
+      <Footer />
+    </>
   );
 }
