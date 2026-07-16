@@ -1,7 +1,7 @@
 const stats = [
   {
     value: "10+",
-    label: "Portfolio Projects",
+    label: "Projects Delivered",
   },
   {
     value: "3MTT",
@@ -9,11 +9,11 @@ const stats = [
   },
   {
     value: "SQL • Python",
-    label: "Analytics Stack",
+    label: "Core Analytics",
   },
   {
     value: "Power BI",
-    label: "Business Intelligence",
+    label: "BI & Dashboards",
   },
 ];
 

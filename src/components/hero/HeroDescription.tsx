@@ -2,20 +2,25 @@ export default function HeroDescription() {
   return (
     <p
       className="
-        mt-8
+        mt-6
         max-w-xl
-        text-lg
-        leading-9
-        text-slate-300
+        text-base
+        leading-8
+        text-slate-400
+        lg:text-lg
       "
     >
-      Hi, I'm{" "}
-      <span className="font-semibold text-white">
-        Pam George
-      </span>
-      , a Data Analyst passionate about transforming raw data into
-      actionable business insights using SQL, Python, Power BI,
-      Excel and AI-driven analytics.
+      I help businesses make smarter decisions by transforming raw data
+      into meaningful insights through data analytics, business
+      intelligence, reporting and AI-powered solutions.
+
+      <br />
+
+      <br />
+
+      My work combines SQL, Python, Power BI and Excel to build
+      dashboards, automate reporting and uncover opportunities hidden
+      inside data.
     </p>
   );
 }
