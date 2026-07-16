@@ -1,8 +1,12 @@
 import Section from "../common/Section";
+
 import BackgroundEffects from "./HeroBackgroundEffects";
 import HeroBadge from "./HeroBadge";
 import HeroHeading from "./HeroHeading";
 import HeroDescription from "./HeroDescription";
+import HeroButtons from "./HeroButtons";
+import HeroStats from "./HeroStats";
+import ProfileSection from "./ProfileSection";
 
 export default function Hero() {
   return (
@@ -26,38 +30,44 @@ export default function Hero() {
           grid
           min-h-[calc(100vh-80px)]
           items-center
-          gap-16
+          gap-12
           lg:grid-cols-2
+          lg:gap-16
         "
       >
         {/* LEFT COLUMN */}
 
-   <div className="max-w-2xl">
-  <HeroBadge />
+        <div
+          className="
+            mx-auto
+            max-w-2xl
+            text-center
+            lg:mx-0
+            lg:text-left
+          "
+        >
+          <HeroBadge />
 
-  <HeroHeading />
+          <HeroHeading />
 
-  <HeroDescription />
-    </div>
+          <HeroDescription />
+
+          <HeroButtons />
+
+          <HeroStats />
+        </div>
 
         {/* RIGHT COLUMN */}
 
-        <div className="flex justify-center lg:justify-end">
-          <div
-            className="
-              flex
-              h-80
-              w-80
-              items-center
-              justify-center
-              rounded-full
-              border-2
-              border-dashed
-              border-slate-600
-            "
-          >
-            Image Placeholder
-          </div>
+        <div
+          className="
+            flex
+            items-center
+            justify-center
+            lg:justify-end
+          "
+        >
+          <ProfileSection />
         </div>
       </div>
     </Section>
