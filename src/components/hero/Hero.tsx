@@ -17,27 +17,35 @@ export default function Hero() {
         overflow-hidden
         bg-slate-950
         text-white
-        py-0
+        py-12
+        lg:py-6
       "
     >
       <BackgroundEffects />
 
       <div
-        className="
-          relative
-          z-10
-          grid
-          h-[calc(100vh-80px)]
-          items-center
-          gap-16
-          lg:grid-cols-2
-        "
-      >
-        {/* LEFT */}
+  className="
+    relative
+    z-10
+    grid
+    min-h-[calc(100vh-80px)]
+    items-center
+    gap-12
+
+    lg:grid-cols-2
+    lg:gap-20
+  "
+    >
+        {/* Left */}
 
         <div
           className="
+            order-2
             max-w-xl
+            text-center
+
+            lg:order-1
+            lg:text-left
           "
         >
           <HeroBadge />
@@ -48,17 +56,19 @@ export default function Hero() {
 
           <HeroButtons />
 
-
           <HeroStats />
         </div>
 
-        {/* RIGHT */}
+        {/* Right */}
 
         <div
           className="
+            order-1
             flex
-            items-center
-            justify-end
+            justify-center
+
+            lg:order-2
+            lg:justify-end
           "
         >
           <ProfileSection />

@@ -3,46 +3,67 @@ export default function ProfileSection() {
     <div
       className="
         relative
+        mx-auto
         flex
         items-center
         justify-center
       "
     >
-      {/* Glow */}
+      {/* Background Glow */}
 
       <div
         className="
           absolute
-          h-[520px]
-          w-[380px]
-          rounded-[12px]
+          h-[300px]
+          w-[220px]
+          rounded-xl
           bg-blue-500/20
           blur-3xl
+
+          sm:h-[360px]
+          sm:w-[260px]
+
+          md:h-[420px]
+          md:w-[300px]
+
+          lg:h-[520px]
+          lg:w-[380px]
         "
       />
 
-      {/* Portrait Frame */}
+      {/* Portrait Card */}
 
       <div
         className="
           relative
-          h-[520px]
-          w-[380px]
           overflow-hidden
-          rounded-[8px]
+          rounded-lg
           border
           border-blue-500/40
           bg-slate-900
           shadow-2xl
+
+          h-[300px]
+          w-[220px]
+
+          sm:h-[360px]
+          sm:w-[260px]
+
+          md:h-[420px]
+          md:w-[300px]
+
+          lg:h-[520px]
+          lg:w-[380px]
         "
       >
         <img
-          src="/images/profile.png"
+          src="public/images/profile/pam-george.jpg"
           alt="Pam Sani George"
           className="
             h-full
             w-full
             object-cover
+            object-top
           "
         />
       </div>
