@@ -8,45 +8,40 @@ export default function ProfileSection() {
         justify-center
       "
     >
-      {/* Background Glow */}
+      {/* Glow */}
 
       <div
         className="
           absolute
-          h-80
-          w-80
-          rounded-full
+          h-[520px]
+          w-[380px]
+          rounded-[12px]
           bg-blue-500/20
           blur-3xl
         "
       />
 
-      {/* Outer Ring */}
+      {/* Portrait Frame */}
 
       <div
         className="
           relative
-          flex
-          h-80
-          w-80
-          items-center
-          justify-center
-          rounded-full
-          border-4
+          h-[520px]
+          w-[380px]
+          overflow-hidden
+          rounded-[8px]
+          border
           border-blue-500/40
           bg-slate-900
           shadow-2xl
         "
       >
-        {/* Profile Image */}
-
         <img
           src="/images/profile.png"
-          alt="Pam George"
+          alt="Pam Sani George"
           className="
-            h-[300px]
-            w-[300px]
-            rounded-full
+            h-full
+            w-full
             object-cover
           "
         />

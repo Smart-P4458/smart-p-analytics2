@@ -8,7 +8,6 @@ import HeroButtons from "./HeroButtons";
 import HeroStats from "./HeroStats";
 import ProfileSection from "./ProfileSection";
 
-
 export default function Hero() {
   return (
     <Section
@@ -18,8 +17,7 @@ export default function Hero() {
         overflow-hidden
         bg-slate-950
         text-white
-        py-16
-        lg:py-24
+        py-0
       "
     >
       <BackgroundEffects />
@@ -29,43 +27,38 @@ export default function Hero() {
           relative
           z-10
           grid
-          min-h-[calc(100vh-80px)]
+          h-[calc(100vh-80px)]
           items-center
-          gap-12
+          gap-16
           lg:grid-cols-2
-          lg:gap-16
         "
       >
-        {/* LEFT COLUMN */}
+        {/* LEFT */}
 
         <div
           className="
-            mx-auto
-            max-w-2xl
-            text-center
-            lg:mx-0
-            lg:text-left
+            max-w-xl
           "
         >
-            <HeroBadge />
+          <HeroBadge />
 
-            <HeroHeading />
+          <HeroHeading />
 
-            <HeroDescription />
+          <HeroDescription />
 
-            <HeroButtons />
+          <HeroButtons />
 
-            <HeroStats />
+
+          <HeroStats />
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT */}
 
         <div
           className="
             flex
             items-center
-            justify-center
-            lg:justify-end
+            justify-end
           "
         >
           <ProfileSection />
