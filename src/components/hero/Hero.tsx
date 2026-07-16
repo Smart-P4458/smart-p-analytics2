@@ -7,6 +7,7 @@ import HeroDescription from "./HeroDescription";
 import HeroButtons from "./HeroButtons";
 import HeroStats from "./HeroStats";
 import ProfileSection from "./ProfileSection";
+import TechCards from "./TechCards";
 
 export default function Hero() {
   return (
@@ -18,7 +19,7 @@ export default function Hero() {
         bg-slate-950
         text-white
         py-12
-        lg:py-6
+        lg:py-10
       "
     >
       <BackgroundEffects />
@@ -57,7 +58,8 @@ export default function Hero() {
           <HeroButtons />
 
           <HeroStats />
-        </div>
+
+             </div>
 
         {/* Right */}
 
@@ -72,6 +74,8 @@ export default function Hero() {
           "
         >
           <ProfileSection />
+
+            <TechCards />
         </div>
       </div>
     </Section>

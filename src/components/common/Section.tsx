@@ -16,8 +16,8 @@ export default function Section({
     <section
       id={id}
       className={`
-        py-20
-        md:py-24
+        py-15
+        md:py-20
         ${className}
       `}
     >

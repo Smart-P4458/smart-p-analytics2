@@ -1,6 +1,6 @@
 const stats = [
   {
-    value: "10+",
+    value: "5+",
     label: "Projects Delivered",
   },
   {
@@ -21,7 +21,7 @@ export default function HeroStats() {
   return (
     <div
       className="
-        mt-12
+        mt-5
         grid
         grid-cols-2
         gap-4
@@ -32,16 +32,16 @@ export default function HeroStats() {
         <div
           key={item.value}
           className="
-            rounded-xl
+            rounded-lg
             border
             border-slate-700
             bg-slate-900/70
-            p-5
+            p-2
             text-center
-            backdrop-blur-sm
+            backdrop-blur-lg
           "
         >
-          <h3 className="text-xl font-bold text-blue-400">
+          <h3 className="text-md font-bold text-blue-400">
             {item.value}
           </h3>
 

@@ -3,13 +3,13 @@ export default function HeroHeading() {
     <h1
       className="
         mt-6
-        text-3xl
+        text-2xl
         font-semibold
         leading-tight
         tracking-tight
         text-white
-        sm:text-4xl
-        lg:text-5xl
+        sm:text-3xl
+        lg:text-4xl
       "
     >
       Hi, I'm

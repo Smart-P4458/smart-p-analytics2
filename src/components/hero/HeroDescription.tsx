@@ -2,7 +2,7 @@ export default function HeroDescription() {
   return (
     <p
       className="
-        mt-6
+        mt-4
         max-w-xl
         text-base
         leading-8
