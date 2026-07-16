@@ -1,7 +1,5 @@
+import AboutSection from "../components/about/About";
+
 export default function About() {
-  return (
-    <main>
-      <h1>About Page</h1>
-    </main>
-  );
+  return <AboutSection />;
 }

@@ -1,12 +1,11 @@
 export default function AboutBackgroundEffects() {
   return (
     <>
-      {/* Top Left Glow */}
       <div
         className="
           absolute
-          -top-40
-          -left-40
+          top-0
+          left-0
           h-96
           w-96
           rounded-full
@@ -15,12 +14,11 @@ export default function AboutBackgroundEffects() {
         "
       />
 
-      {/* Bottom Right Glow */}
       <div
         className="
           absolute
-          -bottom-40
-          -right-40
+          bottom-0
+          right-0
           h-96
           w-96
           rounded-full

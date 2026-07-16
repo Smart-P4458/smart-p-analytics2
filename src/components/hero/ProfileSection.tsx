@@ -57,7 +57,7 @@ export default function ProfileSection() {
         "
       >
         <img
-          src="public/images/profile/pam-sani.jpg"
+          src="/images/profile/pam-sani.jpg"
           alt="Pam Sani George"
           className="
             h-full
