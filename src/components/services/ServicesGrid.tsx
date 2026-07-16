@@ -1,4 +1,7 @@
+import { motion } from "framer-motion";
+
 import ServiceCard from "./ServicesCard";
+import { staggerContainer } from "./ServicesAnimation";
 
 import {
   BarChart3,
@@ -36,7 +39,7 @@ const services = [
   },
   {
     icon: BrainCircuit,
-    title: "AI Assisted Analytics",
+    title: "AI-Assisted Analytics",
     description:
       "Leverage modern AI tools to accelerate analysis, reporting and business insights.",
   },
@@ -50,7 +53,8 @@ const services = [
 
 export default function ServicesGrid() {
   return (
-    <div
+    <motion.div
+      variants={staggerContainer}
       className="
         grid
         gap-8
@@ -66,6 +70,6 @@ export default function ServicesGrid() {
           description={service.description}
         />
       ))}
-    </div>
+    </motion.div>
   );
 }

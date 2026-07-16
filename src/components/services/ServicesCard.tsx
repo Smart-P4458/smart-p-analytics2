@@ -1,4 +1,7 @@
 import type { LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
+
+import { fadeUp } from "./ServicesAnimation";
 
 type ServiceCardProps = {
   icon: LucideIcon;
@@ -12,7 +15,8 @@ export default function ServiceCard({
   description,
 }: ServiceCardProps) {
   return (
-    <div
+    <motion.div
+      variants={fadeUp}
       className="
         group
         relative
@@ -107,15 +111,15 @@ export default function ServiceCard({
           absolute
           inset-0
           opacity-0
-          transition-opacity
-          duration-300
-          group-hover:opacity-100
           bg-gradient-to-br
           from-blue-500/5
           via-transparent
           to-cyan-500/5
+          transition-opacity
+          duration-300
+          group-hover:opacity-100
         "
       />
-    </div>
+    </motion.div>
   );
 }

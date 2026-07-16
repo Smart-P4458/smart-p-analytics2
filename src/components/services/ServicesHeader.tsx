@@ -1,6 +1,9 @@
+import { motion } from "framer-motion";
+import { fadeUp } from "./ServicesAnimation";
 export default function ServicesHeader() {
   return (
-    <div
+    <motion.div
+  variants={fadeUp}
       className="
         mx-auto
         mb-20
@@ -63,6 +66,6 @@ export default function ServicesHeader() {
         Intelligence, Dashboard Development, SQL, Python,
         Microsoft Excel and AI-powered analytical solutions.
       </p>
-    </div>
+    </motion.div>
   );
 }
