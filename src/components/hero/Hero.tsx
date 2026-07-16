@@ -8,6 +8,7 @@ import HeroButtons from "./HeroButtons";
 import HeroStats from "./HeroStats";
 import ProfileSection from "./ProfileSection";
 
+
 export default function Hero() {
   return (
     <Section
@@ -46,15 +47,15 @@ export default function Hero() {
             lg:text-left
           "
         >
-          <HeroBadge />
+            <HeroBadge />
 
-          <HeroHeading />
+            <HeroHeading />
 
-          <HeroDescription />
+            <HeroDescription />
 
-          <HeroButtons />
+            <HeroButtons />
 
-          <HeroStats />
+            <HeroStats />
         </div>
 
         {/* RIGHT COLUMN */}

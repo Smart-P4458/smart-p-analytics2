@@ -1,19 +1,19 @@
 const stats = [
   {
     value: "10+",
-    label: "Projects",
+    label: "Portfolio Projects",
   },
   {
-    value: "SQL",
-    label: "Python",
+    value: "3MTT",
+    label: "DeepTech Certified",
+  },
+  {
+    value: "SQL • Python",
+    label: "Analytics Stack",
   },
   {
     value: "Power BI",
-    label: "Excel",
-  },
-  {
-    value: "AI",
-    label: "Analytics",
+    label: "Business Intelligence",
   },
 ];
 
