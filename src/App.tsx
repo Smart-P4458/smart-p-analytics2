@@ -9,6 +9,7 @@ import Projects from "./pages/Projects";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Skills from "./pages/Skills";
 
 export default function App() {
   return (
@@ -24,6 +25,8 @@ export default function App() {
           <Route path="/projects" element={<Projects />} />
 
           <Route path="/services" element={<Services />} />
+
+          <Route path="/skills" element={<Skills />} />
 
           <Route path="/contact" element={<Contact />} />
 

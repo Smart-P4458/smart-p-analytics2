@@ -26,7 +26,7 @@ export default function ProjectCard({
       className="
         group
         overflow-hidden
-        rounded-3xl
+        rounded-b-[28px]
         border
         border-slate-800
         bg-slate-900/70
@@ -39,13 +39,16 @@ export default function ProjectCard({
         hover:shadow-blue-500/10
       "
     >
+      {/* ========================= */}
       {/* Project Image */}
+      {/* ========================= */}
 
       <div
         className="
           relative
-          h-60
+          h-64
           overflow-hidden
+          rounded-none
           bg-slate-800
         "
       >
@@ -53,12 +56,13 @@ export default function ProjectCard({
           src={image}
           alt={title}
           className="
+            block
             h-full
             w-full
-            object-cover
+            object-fill
             transition-transform
             duration-500
-            group-hover:scale-105
+            group-hover:scale-[1.03]
           "
         />
 
@@ -67,13 +71,16 @@ export default function ProjectCard({
             absolute
             inset-0
             bg-gradient-to-t
-            from-slate-950/60
+            from-slate-950/25
+            via-transparent
             to-transparent
           "
         />
       </div>
 
+      {/* ========================= */}
       {/* Card Content */}
+      {/* ========================= */}
 
       <div className="p-8">
         <h3
@@ -99,7 +106,9 @@ export default function ProjectCard({
           {description}
         </p>
 
+        {/* ========================= */}
         {/* Tech Stack */}
+        {/* ========================= */}
 
         <div
           className="
@@ -129,12 +138,15 @@ export default function ProjectCard({
           ))}
         </div>
 
+        {/* ========================= */}
         {/* Buttons */}
+        {/* ========================= */}
 
         <div
           className="
             mt-8
             flex
+            flex-wrap
             gap-4
           "
         >
@@ -155,11 +167,11 @@ export default function ProjectCard({
               transition-all
               duration-300
               hover:border-blue-500
+              hover:bg-blue-500/10
               hover:text-blue-400
             "
           >
             <GitBranch size={18} />
-
             GitHub
           </a>
 
@@ -179,11 +191,11 @@ export default function ProjectCard({
               text-white
               transition-all
               duration-300
+              hover:scale-105
               hover:bg-blue-700
             "
           >
             <ExternalLink size={18} />
-
             Live Demo
           </a>
         </div>

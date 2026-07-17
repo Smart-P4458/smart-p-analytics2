@@ -5,11 +5,11 @@ import { staggerContainer } from "./ProjectsAnimation";
 
 const projects = [
   {
-    title: "Retail Sales Data Warehouse",
+    title: "Profit Performance & Discount Optimization Analysis",
     description:
-      "End-to-end analytics solution built with Python ETL, PostgreSQL, Star Schema modelling and interactive Power BI dashboards.",
+      "This project analyzes sales performance, profitability trends, and the impact of discounts on profit margins using the Superstore dataset. The goal is to help business leaders identify revenue drivers and optimize discount strategies.",
 
-    image: "/images/projects/retail-sales.jpg",
+    image: "./projects/profit-performance-analysis.jpg",
 
     technologies: [
       "Python",
@@ -18,7 +18,7 @@ const projects = [
       "SQL",
     ],
 
-    github: "#",
+    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
