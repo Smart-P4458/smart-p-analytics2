@@ -105,8 +105,9 @@ export default function Navbar() {
             "Home",
             "About",
             "Projects",
-            "Services",
             "Skills",
+            "Services",
+            "Testimonials",
             "Contact",
           ].map((item) => (
             <a
