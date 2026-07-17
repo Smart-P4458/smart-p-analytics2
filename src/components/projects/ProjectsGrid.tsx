@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import ProjectCard from "./ProjectCard";
+import ProjectsCard from "./ProjectsCard";
 import { staggerContainer } from "./ProjectsAnimation";
 
 const projects = [
@@ -89,7 +89,7 @@ export default function ProjectsGrid() {
       "
     >
       {projects.map((project) => (
-        <ProjectCard
+        <ProjectsCard
           key={project.title}
           {...project}
         />
