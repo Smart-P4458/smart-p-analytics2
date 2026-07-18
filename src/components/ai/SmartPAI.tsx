@@ -3,19 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import ChatWindow from "./ChatWindow";
 
+import { AIProvider } from "./AIContext";
+
 export default function SmartPAI() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <AnimatePresence>
-        {isOpen && (
-          <ChatWindow
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+     <AnimatePresence>
+  {isOpen && (
+    <AIProvider>
+      <ChatWindow
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
+    </AIProvider>
+  )}
+</AnimatePresence>
 
       {/* Floating Button */}
 

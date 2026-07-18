@@ -1,39 +1,46 @@
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
-
-const messages = [
-  {
-    id: 1,
-    sender: "assistant" as const,
-    text:
-      "Hello 👋 I'm Smart-P AI. I can help you answer questions about Pam Sani George, Smart-P Analytics, his projects, skills, certifications and his services. How can I help you today?",
-  },
-];
+import { useAI } from "./AIContext";
 
 export default function ChatMessages() {
-  const [isTyping] = useState(false);
+  const { state } = useAI();
+
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [state.messages, state.isTyping]);
 
   return (
-    <div
+    <section
       className="
         flex
         flex-col
-        gap-5
+        gap-6
+
         px-6
         py-6
+
+        lg:px-8
+        lg:py-8
       "
     >
-      {messages.map((message) => (
+      {state.messages.map((message) => (
         <MessageBubble
           key={message.id}
           sender={message.sender}
           text={message.text}
+          time={message.timestamp}
         />
       ))}
 
-      {isTyping && <TypingIndicator />}
-    </div>
+      {state.isTyping && <TypingIndicator />}
+
+      <div ref={bottomRef} />
+    </section>
   );
 }

@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import { SendHorizonal } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAI } from "./AIContext";
 
 export default function ChatInput() {
   const [message, setMessage] = useState("");
+  const { sendMessage } = useAI();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -23,16 +25,16 @@ export default function ChatInput() {
   };
 
   const handleSend = () => {
-    if (!message.trim()) return;
+  if (!message.trim()) return;
 
-    console.log("User:", message);
+  sendMessage(message);
 
-    setMessage("");
+  setMessage("");
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
+  if (textareaRef.current) {
+    textareaRef.current.style.height = "auto";
+  }
+};
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLTextAreaElement>
