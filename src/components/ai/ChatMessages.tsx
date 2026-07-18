@@ -1,36 +1,66 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react";
+
+import { useAI } from "./AIContext";
 
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
-import { useAI } from "./AIContext";
 import QuickSuggestions from "./QuickSuggestions";
 
 export default function ChatMessages() {
   const { state } = useAI();
-  const showSuggestions = state.messages.length === 1;
 
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({
+  const showSuggestions =
+    state.messages.length === 1 &&
+    state.messages[0].sender === "assistant";
+
+  // Scroll whenever messages change
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
       behavior: "smooth",
     });
-  }, [state.messages, state.isTyping]);
+  }, [state.messages]);
+
+  // Keep scrolling while AI is typing
+  useEffect(() => {
+    if (!state.isTyping) return;
+
+    const container = containerRef.current;
+
+    if (!container) return;
+
+    const interval = setInterval(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [state.isTyping]);
 
   return (
-    <section
+    <div
+      ref={containerRef}
       className="
-        flex
-        flex-col
-        gap-6
-
-        px-6
-        py-6
-
-        lg:px-8
-        lg:py-8
+        flex-1
+        overflow-y-auto
+        px-5
+        py-5
+        scroll-smooth
       "
-      >
+    >
+      <div className="space-y-4">
         {state.messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -43,8 +73,7 @@ export default function ChatMessages() {
         {state.isTyping && <TypingIndicator />}
 
         {showSuggestions && <QuickSuggestions />}
-
-      <div ref={bottomRef} />
-    </section>
+      </div>
+    </div>
   );
 }

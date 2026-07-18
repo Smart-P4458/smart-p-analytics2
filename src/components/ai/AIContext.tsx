@@ -21,19 +21,19 @@ type ProviderProps = {
   children: ReactNode;
 };
 
+const WELCOME_MESSAGE: Message = {
+  id: 1,
+  sender: "assistant",
+  text:
+    "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
+  timestamp: "Now",
+};
+
 export function AIProvider({
   children,
 }: ProviderProps) {
   const [state, setState] = useState<AIState>({
-    messages: [
-      {
-        id: 1,
-        sender: "assistant",
-        text:
-          "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
-        timestamp: "Now",
-      },
-    ],
+    messages: [WELCOME_MESSAGE],
     isTyping: false,
   });
 
@@ -47,38 +47,39 @@ export function AIProvider({
       timestamp: "Now",
     };
 
+    // Add user message immediately
     setState((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
-      isTyping: true,
     }));
 
+    // Small delay before typing starts
     setTimeout(() => {
-      const aiMessage: Message = {
-        id: Date.now() + 1,
-        sender: "assistant",
-        text: generateResponse(message),
-        timestamp: "Now",
-      };
-
       setState((prev) => ({
-        messages: [...prev.messages, aiMessage],
-        isTyping: false,
+        ...prev,
+        isTyping: true,
       }));
-    }, 800);
+
+      // AI "thinking" time
+      setTimeout(() => {
+        const aiMessage: Message = {
+          id: Date.now() + 1,
+          sender: "assistant",
+          text: generateResponse(message),
+          timestamp: "Now",
+        };
+
+        setState((prev) => ({
+          messages: [...prev.messages, aiMessage],
+          isTyping: false,
+        }));
+      }, 1500); // Increase to 1800 or 2000 if you want slower typing
+    }, 250);
   };
 
   const clearChat = () => {
     setState({
-      messages: [
-        {
-          id: 1,
-          sender: "assistant",
-          text:
-            "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
-          timestamp: "Now",
-        },
-      ],
+      messages: [WELCOME_MESSAGE],
       isTyping: false,
     });
   };
