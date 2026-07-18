@@ -15,33 +15,22 @@ export default function MessageBubble({
 
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 20,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      transition={{
-        duration: 0.3,
-      }}
-      className={`
-        flex
-        ${isAssistant ? "justify-start" : "justify-end"}
-      `}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}
     >
       <div
         className={`
-          max-w-[90%]
-          lg:max-w-[75%]
+          max-w-[88%]
+          lg:max-w-[72%]
 
           rounded-3xl
 
-          px-6
-          py-5
+          px-5
+          py-4
 
-          shadow-lg
+          shadow-md
 
           ${
             isAssistant
@@ -65,7 +54,8 @@ export default function MessageBubble({
         <p
           className="
             whitespace-pre-wrap
-            leading-8
+            text-[14px]
+            leading-5
           "
         >
           {text}
@@ -74,8 +64,8 @@ export default function MessageBubble({
         {time && (
           <p
             className={`
-              mt-4
-              text-xs
+              mt-2
+              text-[11px]
 
               ${
                 isAssistant
