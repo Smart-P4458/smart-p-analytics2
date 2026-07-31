@@ -1,5 +1,5 @@
 import {
-  useLayoutEffect,
+  useEffect,
   useRef,
 } from "react";
 
@@ -12,28 +12,35 @@ import QuickSuggestions from "./QuickSuggestions";
 export default function ChatMessages() {
   const { state } = useAI();
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef =
+    useRef<HTMLDivElement>(null);
+
+  const bottomRef =
+    useRef<HTMLDivElement>(null);
 
   const showSuggestions =
     state.messages.length === 1 &&
     state.messages[0].sender === "assistant";
 
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-
-    if (!container) return;
-
-    let animationId: number;
-
-    const followConversation = () => {
-      container.scrollTop = container.scrollHeight;
-      animationId = requestAnimationFrame(followConversation);
-    };
-
-    animationId = requestAnimationFrame(followConversation);
-
-    return () => cancelAnimationFrame(animationId);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
   }, [state.messages]);
+
+  useEffect(() => {
+    if (!state.isTyping) return;
+
+    const interval = setInterval(() => {
+      bottomRef.current?.scrollIntoView({
+        behavior: "auto",
+        block: "end",
+      });
+    }, 25);
+
+    return () => clearInterval(interval);
+  }, [state.isTyping]);
 
   return (
     <div
@@ -56,9 +63,15 @@ export default function ChatMessages() {
           />
         ))}
 
-        {state.isTyping && <TypingIndicator />}
+        {state.isTyping && (
+          <TypingIndicator />
+        )}
 
-        {showSuggestions && <QuickSuggestions />}
+        {showSuggestions && (
+          <QuickSuggestions />
+        )}
+
+        <div ref={bottomRef} />
       </div>
     </div>
   );

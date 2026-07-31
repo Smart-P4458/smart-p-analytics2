@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import useTypewriter from "./useTypewriter";
 
 type MessageBubbleProps = {
   sender: "assistant" | "user";
@@ -14,29 +13,30 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isAssistant = sender === "assistant";
 
-  const animatedText = useTypewriter(
-    text,
-    isAssistant ? 15 : 0
-  );
-
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      transition={{
+        duration: 0.25,
+      }}
       className={`flex ${
-        isAssistant ? "justify-start" : "justify-end"
+        isAssistant
+          ? "justify-start"
+          : "justify-end"
       }`}
     >
       <div
         className={`
           max-w-[88%]
           lg:max-w-[72%]
-
           rounded-3xl
           px-5
           py-4
           shadow-md
+          transition-all
+          duration-150
 
           ${
             isAssistant
@@ -46,7 +46,7 @@ export default function MessageBubble({
         `}
       >
         <p className="whitespace-pre-wrap text-[15px] leading-6">
-          {isAssistant ? animatedText : text}
+          {text}
         </p>
 
         {time && (

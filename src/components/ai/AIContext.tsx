@@ -7,12 +7,6 @@ import {
 
 import { generateResponse } from "./responseGenerator";
 
-import {
-  addAssistantMessage,
-  addUserMessage,
-  clearConversationHistory,
-} from "./conversationMemory";
-
 import type {
   AIContextType,
   AIState,
@@ -30,8 +24,7 @@ type ProviderProps = {
 const WELCOME_MESSAGE: Message = {
   id: 1,
   sender: "assistant",
-  text:
-    "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
+  text: "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
   timestamp: "Now",
 };
 
@@ -46,8 +39,6 @@ export function AIProvider({
   const sendMessage = (message: string) => {
     if (!message.trim()) return;
 
-    addUserMessage(message);
-
     const userMessage: Message = {
       id: Date.now(),
       sender: "user",
@@ -58,37 +49,58 @@ export function AIProvider({
     setState((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
+      isTyping: true,
     }));
 
+    const fullResponse = generateResponse(message);
+
+    const assistantId = Date.now() + 1;
+
     setTimeout(() => {
+      // Add empty assistant bubble
       setState((prev) => ({
         ...prev,
-        isTyping: true,
+        messages: [
+          ...prev.messages,
+          {
+            id: assistantId,
+            sender: "assistant",
+            text: "",
+            timestamp: "Now",
+          },
+        ],
       }));
 
-      setTimeout(() => {
-        const response = generateResponse(message);
+      let index = 0;
 
-        addAssistantMessage(response);
-
-        const aiMessage: Message = {
-          id: Date.now() + 1,
-          sender: "assistant",
-          text: response,
-          timestamp: "Now",
-        };
+      const interval = setInterval(() => {
+        index++;
 
         setState((prev) => ({
-          messages: [...prev.messages, aiMessage],
-          isTyping: false,
+          ...prev,
+          messages: prev.messages.map((msg) =>
+            msg.id === assistantId
+              ? {
+                  ...msg,
+                  text: fullResponse.slice(0, index),
+                }
+              : msg
+          ),
         }));
-      }, 1500);
-    }, 250);
+
+        if (index >= fullResponse.length) {
+          clearInterval(interval);
+
+          setState((prev) => ({
+            ...prev,
+            isTyping: false,
+          }));
+        }
+      }, 3);
+    }, 700);
   };
 
   const clearChat = () => {
-    clearConversationHistory();
-
     setState({
       messages: [WELCOME_MESSAGE],
       isTyping: false,

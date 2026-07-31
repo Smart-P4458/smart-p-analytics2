@@ -50,23 +50,23 @@ export function generateResponse(message: string): string {
     return `
 Hello! 👋
 
-Welcome to Smart-P Analytics.
+Welcome to Pam Sani George Portfolio.
 
 I'm Smart-P AI, Pam Sani George's intelligent portfolio assistant.
 
 I can help you explore:
 
-• 👤 About Pam
+• 👤 About Pam Sani George
 
-• 📊 Projects
+• 📊 His Projects
 
 • 💼 Services
 
-• 🧠 Skills
+• 🧠 His Skills
 
-• 🎓 Certifications
+• 🎓 His Certifications
 
-• 📄 Resume
+• 📄 His Resume
 
 • 📞 Contact Information
 
@@ -83,6 +83,7 @@ How can I help you today?
     "how're you",
     "how is it going",
     "how do you do",
+    "how you dey",
   ];
 
   if (wellbeing.some((item) => input.includes(item))) {
@@ -114,7 +115,7 @@ What would you like to know today?
     return `
 You're most welcome! 😊
 
-Thank you for visiting Smart-P Analytics.
+Thank you for visiting Pam Sani George Portfolio.
 
 It was a pleasure assisting you.
 
@@ -143,15 +144,15 @@ You can ask me about:
 
 • 👤 Pam Sani George
 
-• 📊 Projects
+• 📊 His Projects
 
-• 💼 Services
+• 💼 His Services
 
-• 🧠 Skills
+• 🧠 His Skills
 
 • 🎓 Certifications
 
-• 📄 Resume
+• 📄 His Resume
 
 • 📞 Contact Information
 
