@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { SendHorizonal } from "lucide-react";
+import { SendHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAI } from "./AIContext";
 
@@ -141,7 +141,7 @@ export default function ChatInput() {
             disabled:opacity-40
           "
         >
-          <SendHorizonal size={20} />
+          <SendHorizontal size={20} />
         </motion.button>
       </div>
 

@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-
 import Section from "../common/Section";
 
 import ServicesBackgroundEffects from "./ServicesBackgroundEffects";

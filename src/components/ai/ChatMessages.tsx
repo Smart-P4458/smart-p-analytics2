@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useLayoutEffect,
   useRef,
 } from "react";
@@ -19,35 +18,22 @@ export default function ChatMessages() {
     state.messages.length === 1 &&
     state.messages[0].sender === "assistant";
 
-  // Scroll whenever messages change
   useLayoutEffect(() => {
     const container = containerRef.current;
 
     if (!container) return;
 
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: "smooth",
-    });
+    let animationId: number;
+
+    const followConversation = () => {
+      container.scrollTop = container.scrollHeight;
+      animationId = requestAnimationFrame(followConversation);
+    };
+
+    animationId = requestAnimationFrame(followConversation);
+
+    return () => cancelAnimationFrame(animationId);
   }, [state.messages]);
-
-  // Keep scrolling while AI is typing
-  useEffect(() => {
-    if (!state.isTyping) return;
-
-    const container = containerRef.current;
-
-    if (!container) return;
-
-    const interval = setInterval(() => {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "smooth",
-      });
-    }, 40);
-
-    return () => clearInterval(interval);
-  }, [state.isTyping]);
 
   return (
     <div

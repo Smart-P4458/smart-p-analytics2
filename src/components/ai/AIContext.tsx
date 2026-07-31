@@ -7,6 +7,12 @@ import {
 
 import { generateResponse } from "./responseGenerator";
 
+import {
+  addAssistantMessage,
+  addUserMessage,
+  clearConversationHistory,
+} from "./conversationMemory";
+
 import type {
   AIContextType,
   AIState,
@@ -40,6 +46,8 @@ export function AIProvider({
   const sendMessage = (message: string) => {
     if (!message.trim()) return;
 
+    addUserMessage(message);
+
     const userMessage: Message = {
       id: Date.now(),
       sender: "user",
@@ -47,25 +55,26 @@ export function AIProvider({
       timestamp: "Now",
     };
 
-    // Add user message immediately
     setState((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
     }));
 
-    // Small delay before typing starts
     setTimeout(() => {
       setState((prev) => ({
         ...prev,
         isTyping: true,
       }));
 
-      // AI "thinking" time
       setTimeout(() => {
+        const response = generateResponse(message);
+
+        addAssistantMessage(response);
+
         const aiMessage: Message = {
           id: Date.now() + 1,
           sender: "assistant",
-          text: generateResponse(message),
+          text: response,
           timestamp: "Now",
         };
 
@@ -73,11 +82,13 @@ export function AIProvider({
           messages: [...prev.messages, aiMessage],
           isTyping: false,
         }));
-      }, 1500); // Increase to 1800 or 2000 if you want slower typing
+      }, 1500);
     }, 250);
   };
 
   const clearChat = () => {
+    clearConversationHistory();
+
     setState({
       messages: [WELCOME_MESSAGE],
       isTyping: false,

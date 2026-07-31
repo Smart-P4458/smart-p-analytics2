@@ -1,7 +1,37 @@
 import { matchIntent } from "./intentMatcher";
+import { getConversationHistory } from "./conversationMemory";
 
 export function generateResponse(message: string): string {
   const input = message.toLowerCase().trim();
+
+  /* ---------------------------------------- */
+  /* Conversation Memory */
+  /* ---------------------------------------- */
+
+  if (
+    input.includes("previous") ||
+    input.includes("last question") ||
+    input.includes("last answer") ||
+    input.includes("what did i ask") ||
+    input.includes("remember")
+  ) {
+    const history = getConversationHistory();
+
+    if (history.length === 0) {
+      return "This is the beginning of our conversation, so I don't have anything to remember yet.";
+    }
+
+    const previous = history
+      .slice(-6)
+      .reverse()
+      .map(
+        (item) =>
+          `${item.role === "user" ? "🧑 You" : "🤖 Smart-P AI"}: ${item.message}`
+      )
+      .join("\n\n");
+
+    return `Here's what we've discussed recently:\n\n${previous}`;
+  }
 
   /* ---------------------------------------- */
   /* Greetings */
