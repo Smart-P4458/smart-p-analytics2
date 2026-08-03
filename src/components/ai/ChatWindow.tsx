@@ -70,10 +70,10 @@ export default function ChatWindow({
               z-[999]
 
               h-[88vh]
-              max-h-[860px]
+              max-h-[800px]
 
               w-[92vw]
-              max-w-[1300px]
+              max-w-[1000px]
 
               -translate-x-1/2
               -translate-y-1/2

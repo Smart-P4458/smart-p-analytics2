@@ -96,8 +96,8 @@ export function AIProvider({
             isTyping: false,
           }));
         }
-      }, 3);
-    }, 700);
+      }, 5);
+    }, 900);
   };
 
   const clearChat = () => {

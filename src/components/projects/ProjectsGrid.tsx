@@ -24,11 +24,11 @@ const projects = [
   },
 
   {
-    title: "Customer Sales Dashboard",
+    title: "Real-Time Retail Sales Dashboard",
     description:
       "Interactive Power BI dashboard providing executive KPIs, customer insights and sales performance analysis.",
 
-    image: "/images/projects/customer-dashboard.jpg",
+    image: "./projects/real-time-retail-sales-analysis-dashboard.png",
 
     technologies: [
       "Power BI",
@@ -36,17 +36,17 @@ const projects = [
       "Power Query",
     ],
 
-    github: "#",
+    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
 
   {
-    title: "Excel Business Intelligence",
+    title: "Udemy Online course Analysis Dashboard",
     description:
       "Advanced Excel reporting solution featuring PivotTables, dashboards and automated reporting.",
 
-    image: "/images/projects/excel-dashboard.jpg",
+    image: "./projects/Udemy-Online-course-Analysis-Dashboard.jpg",
 
     technologies: [
       "Excel",
@@ -54,7 +54,7 @@ const projects = [
       "Analytics",
     ],
 
-    github: "#",
+    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
@@ -64,7 +64,7 @@ const projects = [
     description:
       "Responsive personal portfolio built using React, TypeScript and Tailwind CSS showcasing analytics projects and services.",
 
-    image: "/images/projects/portfolio.jpg",
+    image: "./public/projects/Smart-P-Analytics_Portfolio.jpg",
 
     technologies: [
       "React",
@@ -72,7 +72,7 @@ const projects = [
       "Tailwind",
     ],
 
-    github: "#",
+    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },

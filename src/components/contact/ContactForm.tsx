@@ -36,7 +36,7 @@ export default function ContactForm() {
         <input
           id="name"
           type="text"
-          placeholder="Pam Sani George"
+          placeholder="Your Full Name"
           className="
             w-full
             rounded-xl
@@ -44,7 +44,7 @@ export default function ContactForm() {
             border-slate-700
             bg-slate-950
             px-5
-            py-4
+            py-3
             text-white
             outline-none
             transition-all
@@ -84,7 +84,7 @@ export default function ContactForm() {
             border-slate-700
             bg-slate-950
             px-5
-            py-4
+            py-3
             text-white
             outline-none
             transition-all
@@ -116,7 +116,7 @@ export default function ContactForm() {
         <input
           id="subject"
           type="text"
-          placeholder="Project Discussion"
+          placeholder="What's Your Discussion Topic?"
           className="
             w-full
             rounded-xl
@@ -124,7 +124,7 @@ export default function ContactForm() {
             border-slate-700
             bg-slate-950
             px-5
-            py-4
+            py-3
             text-white
             outline-none
             transition-all
@@ -165,7 +165,7 @@ export default function ContactForm() {
             border-slate-700
             bg-slate-950
             px-5
-            py-4
+            py-3
             text-white
             outline-none
             transition-all

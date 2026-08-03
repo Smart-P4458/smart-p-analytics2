@@ -31,7 +31,7 @@ const contacts = [
 ];
 
 const socials = [
-  
+
   {
     icon: GitBranch,
     href: "#",
@@ -72,10 +72,10 @@ export default function ContactInfo() {
             <a
               key={item.title}
               href={item.href}
-              className="group flex items-center gap-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 transition-all duration-300 hover:border-blue-500/40 hover:bg-slate-900"
+              className="group flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-2 transition-all duration-300 hover:border-blue-500/40 hover:bg-slate-900"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 transition-all duration-300 group-hover:bg-blue-500 group-hover:text-white">
-                <Icon size={24} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 transition-all duration-300 group-hover:bg-blue-500 group-hover:text-white">
+                <Icon size={18} />
               </div>
 
               <div>
@@ -107,9 +107,9 @@ export default function ContactInfo() {
               <a
                 key={index}
                 href={social.href}
-                className="flex h-14 w-14 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/70 text-slate-300 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
               >
-                <Icon size={22} />
+                <Icon size={18} />
               </a>
             );
           })}
