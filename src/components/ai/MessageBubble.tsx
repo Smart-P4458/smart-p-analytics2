@@ -1,4 +1,9 @@
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+import ResumeCard from "./ResumeCard";
+import CertificateCard from "./CertificateCard";
 
 type MessageBubbleProps = {
   sender: "assistant" | "user";
@@ -13,6 +18,18 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isAssistant = sender === "assistant";
 
+  const hasResumeCard =
+    isAssistant && text.includes("[RESUME_CARD]");
+
+  const hasCertificateCard =
+    isAssistant &&
+    text.includes("[CERTIFICATE_CARD]");
+
+  const displayText = text
+    .replace("[RESUME_CARD]", "")
+    .replace("[CERTIFICATE_CARD]", "")
+    .trim();
+
   return (
     <motion.div
       layout
@@ -22,9 +39,7 @@ export default function MessageBubble({
         duration: 0.25,
       }}
       className={`flex ${
-        isAssistant
-          ? "justify-start"
-          : "justify-end"
+        isAssistant ? "justify-start" : "justify-end"
       }`}
     >
       <div
@@ -45,9 +60,41 @@ export default function MessageBubble({
           }
         `}
       >
-        <p className="whitespace-pre-wrap text-[15px] leading-6">
-          {text}
-        </p>
+        <div
+          className="
+            text-[15px]
+            leading-6
+            [&_p]:mb-2
+            [&_p:last-child]:mb-0
+            [&_strong]:font-semibold
+            [&_a]:font-medium
+            [&_a]:underline
+            [&_a]:underline-offset-2
+          "
+        >
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {displayText}
+          </ReactMarkdown>
+        </div>
+
+        {hasResumeCard && <ResumeCard />}
+
+        {hasCertificateCard && (
+          <CertificateCard />
+        )}
 
         {time && (
           <p

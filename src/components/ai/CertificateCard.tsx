@@ -1,15 +1,23 @@
-import { Download, FileText, ExternalLink } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  Award,
+} from "lucide-react";
 
-const RESUME_URL =
-  "/documents/Pam-Sani-George - Data-Analyst-Resume.pdf";
+const CERTIFICATE_URL =
+  "/images/certificates/Pam-Sani-George-Advanced-Data-Cert.pdf";
 
-export default function ResumeCard() {
+const VERIFICATION_URL =
+  "https://app.3mtt.training/verify?id=FE/23/2802316";
+
+export default function CertificateCard() {
   return (
     <div
       className="
         mt-4
         w-full
         max-w-sm
+        overflow-hidden
         rounded-2xl
         border
         border-slate-700
@@ -18,6 +26,8 @@ export default function ResumeCard() {
         shadow-lg
       "
     >
+      {/* Certificate Header */}
+
       <div className="flex items-center gap-3">
         <div
           className="
@@ -32,24 +42,51 @@ export default function ResumeCard() {
             text-blue-400
           "
         >
-          <FileText size={22} />
+          <Award size={22} />
         </div>
 
         <div className="min-w-0">
           <h3 className="font-semibold text-white">
-            Pam Sani George — Resume
+            3MTT DeepTech Skills Certificate
           </h3>
 
           <p className="text-sm text-slate-400">
-            Professional Resume
+            Federal Government 3MTT Programme
           </p>
         </div>
       </div>
 
+      {/* Certificate Preview */}
+
+      <div
+        className="
+          mt-4
+          overflow-hidden
+          rounded-xl
+          border
+          border-slate-700
+          bg-slate-950
+        "
+      >
+        <iframe
+          src={CERTIFICATE_URL}
+          title="Pam Sani George 3MTT Certificate"
+          className="
+            h-72
+            w-full
+            border-0
+          "
+        />
+      </div>
+
+      {/* Actions */}
+
       <div className="mt-4 flex gap-2">
+        {/* Download Certificate */}
+
         <a
-          href={RESUME_URL}
-          download="Pam-Sani-George-Resume.pdf"
+          href={CERTIFICATE_URL}
+          download="Pam-Sani-George-Advanced-Data-Cert.pdf"
           className="
             inline-flex
             flex-1
@@ -71,12 +108,15 @@ export default function ResumeCard() {
           Download
         </a>
 
+        {/* Verify Certificate */}
+
         <a
-          href={RESUME_URL}
+          href={VERIFICATION_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="
             inline-flex
+            flex-1
             items-center
             justify-center
             gap-2
@@ -94,7 +134,7 @@ export default function ResumeCard() {
           "
         >
           <ExternalLink size={17} />
-          View
+          Verify
         </a>
       </div>
     </div>

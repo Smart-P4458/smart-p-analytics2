@@ -64,7 +64,7 @@ const projects = [
     description:
       "Responsive personal portfolio built using React, TypeScript and Tailwind CSS showcasing analytics projects and services.",
 
-    image: "./public/projects/Smart-P-Analytics_Portfolio.jpg",
+    image: "./projects/Smart-P-Analytics_Portfolio.jpg",
 
     technologies: [
       "React",

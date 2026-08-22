@@ -24,23 +24,10 @@ export default function ChatMessages() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: "auto",
       block: "end",
     });
   }, [state.messages]);
-
-  useEffect(() => {
-    if (!state.isTyping) return;
-
-    const interval = setInterval(() => {
-      bottomRef.current?.scrollIntoView({
-        behavior: "auto",
-        block: "end",
-      });
-    }, 25);
-
-    return () => clearInterval(interval);
-  }, [state.isTyping]);
 
   return (
     <div

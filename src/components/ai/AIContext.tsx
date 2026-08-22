@@ -28,6 +28,11 @@ const WELCOME_MESSAGE: Message = {
   timestamp: "Now",
 };
 
+// Smart-P AI streaming settings
+const RESPONSE_START_DELAY = 300;
+const CHUNK_SIZE = 4;
+const CHUNK_DELAY = 15;
+
 export function AIProvider({
   children,
 }: ProviderProps) {
@@ -57,7 +62,6 @@ export function AIProvider({
     const assistantId = Date.now() + 1;
 
     setTimeout(() => {
-      // Add empty assistant bubble
       setState((prev) => ({
         ...prev,
         messages: [
@@ -74,7 +78,10 @@ export function AIProvider({
       let index = 0;
 
       const interval = setInterval(() => {
-        index++;
+        index = Math.min(
+          index + CHUNK_SIZE,
+          fullResponse.length
+        );
 
         setState((prev) => ({
           ...prev,
@@ -96,8 +103,8 @@ export function AIProvider({
             isTyping: false,
           }));
         }
-      }, 5);
-    }, 900);
+      }, CHUNK_DELAY);
+    }, RESPONSE_START_DELAY);
   };
 
   const clearChat = () => {

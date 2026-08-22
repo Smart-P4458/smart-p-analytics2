@@ -39,9 +39,8 @@ export default function HeroButtons() {
       {/* Secondary Button */}
 
       <a
-        href="/documents/Pam-George-Resume.pdf"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="/documents/Pam-Sani-George - Data-Analyst-Resume.pdf"
+        download="Pam-Sani-George-Resume.pdf"
         className="
           inline-flex
           items-center
