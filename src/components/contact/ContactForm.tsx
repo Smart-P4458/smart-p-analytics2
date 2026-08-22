@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Send, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Send,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 
 import { fadeRight } from "./ContactAnimation";
 
 const MAKE_WEBHOOK_URL =
-  "https://hook.us2.make.com/ul2dc69s1g1nb4bdjirqusuu1uns7v7y";
+  "https://hook.eu1.make.com/o27nuhi1d7445yxdf1fefgpq4citrldg";
 
 type FormData = {
   fullName: string;
@@ -16,13 +20,14 @@ type FormData = {
 };
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
+  const [formData, setFormData] =
+    useState<FormData>({
+      fullName: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    });
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
@@ -31,6 +36,60 @@ export default function ContactForm() {
     useState(false);
 
   const [error, setError] = useState("");
+
+  /*
+   * ----------------------------------------
+   * AI CONTACT PREFILL
+   * ----------------------------------------
+   *
+   * Smart-P AI can send the visitor here with:
+   *
+   * ?contact=1
+   * &subject=...
+   * &message=...
+   *
+   * The form reads those values and pre-fills
+   * the Subject and Message fields.
+   */
+
+  useEffect(() => {
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const shouldPrefill =
+    params.get("contact") === "1";
+
+  if (!shouldPrefill) return;
+
+  const subject =
+    params.get("subject") || "";
+
+  const message =
+    params.get("message") || "";
+
+  setFormData((prev) => ({
+    ...prev,
+    subject,
+    message,
+  }));
+
+  const cleanUrl =
+    window.location.pathname +
+    window.location.hash;
+
+  window.history.replaceState(
+    {},
+    document.title,
+    cleanUrl
+  );
+}, []);
+
+  /*
+   * ----------------------------------------
+   * FORM INPUT HANDLER
+   * ----------------------------------------
+   */
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -48,6 +107,12 @@ export default function ContactForm() {
     setIsSuccess(false);
   };
 
+  /*
+   * ----------------------------------------
+   * FORM SUBMISSION
+   * ----------------------------------------
+   */
+
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
@@ -62,7 +127,9 @@ export default function ContactForm() {
     }
 
     if (!formData.email.trim()) {
-      setError("Please enter your email address.");
+      setError(
+        "Please enter your email address."
+      );
       return;
     }
 
@@ -79,24 +146,37 @@ export default function ContactForm() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch(MAKE_WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          subject: formData.subject.trim(),
-          notes: formData.message.trim(),
+      const response = await fetch(
+        MAKE_WEBHOOK_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName:
+              formData.fullName.trim(),
 
-          source: "Smart-P Analytics Portfolio",
+            email:
+              formData.email.trim(),
 
-          submittedAt:
-            new Date().toISOString(),
-        }),
-      });
+            phone:
+              formData.phone.trim(),
+
+            subject:
+              formData.subject.trim(),
+
+            notes:
+              formData.message.trim(),
+
+            source:
+              "Smart-P Analytics Portfolio",
+
+            submittedAt:
+              new Date().toISOString(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -141,7 +221,7 @@ export default function ContactForm() {
         backdrop-blur-sm
       "
     >
-      {/* Success Message */}
+      {/* Success */}
 
       {isSuccess && (
         <div
@@ -168,15 +248,16 @@ export default function ContactForm() {
             </p>
 
             <p className="mt-1 text-sm text-emerald-300/80">
-              Thank you for reaching out. Pam has
-              received your message and will get
-              back to you as soon as possible.
+              Thank you for reaching out.
+              Pam has received your message
+              and will get back to you as soon
+              as possible.
             </p>
           </div>
         </div>
       )}
 
-      {/* Error Message */}
+      {/* Error */}
 
       {error && (
         <div
@@ -203,7 +284,7 @@ export default function ContactForm() {
         </div>
       )}
 
-      {/* Name */}
+      {/* Full Name */}
 
       <div>
         <label
