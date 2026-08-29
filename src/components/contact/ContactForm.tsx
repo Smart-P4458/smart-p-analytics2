@@ -8,9 +8,6 @@ import {
 
 import { fadeRight } from "./ContactAnimation";
 
-const MAKE_WEBHOOK_URL =
-  "https://hook.eu1.make.com/o27nuhi1d7445yxdf1fefgpq4citrldg";
-
 type FormData = {
   fullName: string;
   email: string;
@@ -147,7 +144,7 @@ export default function ContactForm() {
       setIsSubmitting(true);
 
       const response = await fetch(
-        MAKE_WEBHOOK_URL,
+  "/.netlify/functions/contact",
         {
           method: "POST",
           headers: {

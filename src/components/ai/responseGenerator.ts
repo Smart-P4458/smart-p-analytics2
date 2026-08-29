@@ -1,13 +1,12 @@
 import { matchIntent } from "./intentMatcher";
 import { getConversationHistory } from "./conversationMemory";
-import { createContactLink } from "./contactLink";
 
 export function generateResponse(message: string): string {
   const input = message.toLowerCase().trim();
 
-  /* ---------------------------------------- */
-  /* Conversation Memory */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     Conversation Memory
+  ---------------------------------------- */
 
   if (
     input.includes("previous") ||
@@ -34,9 +33,9 @@ export function generateResponse(message: string): string {
     return `Here's what we've discussed recently:\n\n${previous}`;
   }
 
-  /* ---------------------------------------- */
-  /* Greetings */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     Greetings
+  ---------------------------------------- */
 
   const greetings = [
     "hi",
@@ -47,37 +46,38 @@ export function generateResponse(message: string): string {
     "good evening",
   ];
 
-  if (greetings.some((greeting) => input.includes(greeting))) {
+  if (
+    greetings.some(
+      (greeting) =>
+        input === greeting ||
+        input.startsWith(`${greeting} `)
+    )
+  ) {
     return `
 Hello! 👋
 
-Welcome to Pam Sani George Portfolio.
+Welcome to Pam Sani George's Portfolio.
 
 I'm Smart-P AI, Pam Sani George's intelligent portfolio assistant.
 
 I can help you explore:
 
 • 👤 About Pam Sani George
-
-• 📊 His Projects
-
+• 📊 Projects
 • 💼 Services
-
-• 🧠 His Skills
-
-• 🎓 His Certifications
-
-• 📄 His Resume
-
+• 🧠 Skills
+• 🎓 Certifications
+• 📄 Resume
 • 📞 Contact Information
+• 🚀 Career Goals
 
 How can I help you today?
 `.trim();
   }
 
-  /* ---------------------------------------- */
-  /* How are you */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     How are you
+  ---------------------------------------- */
 
   const wellbeing = [
     "how are you",
@@ -99,9 +99,50 @@ What would you like to know today?
 `.trim();
   }
 
-  /* ---------------------------------------- */
-  /* Farewell */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     Contact / Hire Intent
+  ---------------------------------------- */
+
+  const contactIntent = [
+    "contact pam",
+    "contact him",
+    "contact george",
+    "get in touch",
+    "reach pam",
+    "reach him",
+    "hire pam",
+    "hire george",
+    "work with pam",
+    "work with him",
+    "work with george",
+    "collaborate with pam",
+    "collaboration",
+    "send a message",
+    "send him a message",
+    "talk to pam",
+    "speak to pam",
+    "email pam",
+  ];
+
+  if (
+    contactIntent.some((item) =>
+      input.includes(item)
+    )
+  ) {
+    return `
+I'd be happy to help you get in touch with Pam. 🤝
+
+If you'd like to discuss a project, collaboration, data analytics, business intelligence, dashboard development, or another professional opportunity, please use the contact form.
+
+You can share your requirements and contact details there, and Pam will get back to you as soon as possible.
+
+👉 [Contact Pam](#contact)
+`.trim();
+  }
+
+  /* ----------------------------------------
+     Farewell
+  ---------------------------------------- */
 
   const farewells = [
     "bye",
@@ -112,86 +153,27 @@ What would you like to know today?
     "later",
   ];
 
-  if (farewells.some((item) => input.includes(item))) {
+  if (
+    farewells.some(
+      (item) =>
+        input === item ||
+        input.startsWith(`${item} `)
+    )
+  ) {
     return `
 You're most welcome! 😊
 
-Thank you for visiting Pam Sani George Portfolio.
+Thank you for visiting Pam Sani George's Portfolio.
 
 It was a pleasure assisting you.
 
-Have a wonderful day and feel free to come back anytime! 👋
-`.trim();
-  }
-  /* ---------------------------------------- */
-  /* Contact / Collaboration Intent */
-  /* ---------------------------------------- */
-
-  const contactIntentKeywords = [
-    "hire pam",
-    "hire him",
-    "work with pam",
-    "work with him",
-    "collaborate with pam",
-    "collaborate with him",
-    "contact pam",
-    "reach pam",
-    "talk to pam",
-    "speak to pam",
-    "project",
-    "my project",
-    "our project",
-    "business project",
-    "need a dashboard",
-    "need a power bi",
-    "need data analysis",
-    "need data analytics",
-    "need a data analyst",
-    "need help with data",
-    "data consulting",
-    "analytics consulting",
-    "dashboard development",
-    "business intelligence solution",
-    "business intelligence",
-    "looking for a data analyst",
-    "looking for a data scientist",
-    "looking for an analyst",
-    "looking for collaboration",
-  ];
-
-  const hasContactIntent =
-    contactIntentKeywords.some((keyword) =>
-      input.includes(keyword)
-    );
-
-  if (hasContactIntent) {
-    const contactLink = createContactLink(
-      "Project / Collaboration Enquiry",
-      `Hello Pam,
-
-I'd like to discuss a project or collaboration opportunity with you.
-
-My enquiry:
-${message}`
-    );
-
-    return `
-I'd be happy to help you connect with Pam. 🤝
-
-Based on what you've described, this sounds like something that may be worth discussing with him directly.
-
-You can send Pam your requirements through the contact form. I've prepared the message for you so you won't have to start from scratch.
-
-[Contact Pam →](${contactLink})
-
-Once you submit the form, your message will be securely forwarded to Pam, and he'll be able to review your requirements and get back to you.
-
+Have a wonderful day, and feel free to come back anytime! 👋
 `.trim();
   }
 
-  /* ---------------------------------------- */
-  /* Knowledge Base */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     Knowledge Base
+  ---------------------------------------- */
 
   const match = matchIntent(message);
 
@@ -199,28 +181,19 @@ Once you submit the form, your message will be securely forwarded to Pam, and he
     return match.response.trim();
   }
 
-    /* ---------------------------------------- */
-  /* Default / Unknown Question */
-  /* ---------------------------------------- */
-
-  const contactLink = createContactLink(
-    "Question for Pam Sani George",
-    `Hello Pam,
-
-I have a question that I would like to discuss with you.
-
-My question:
-${message}`
-  );
+  /* ----------------------------------------
+     Professional AI Fallback
+  ---------------------------------------- */
 
   return `
-I don't currently have enough information in my knowledge base to give you a reliable answer to that question, and I don't want to guess or give you inaccurate information.
+I don't currently have enough information in my knowledge base to give you a reliable answer about that.
 
-If you'd like, you can send your question directly to Pam. I've prepared the contact form with your question so you can submit it quickly.
+If your question is related to a project, business requirement, collaboration, or a service you would like to discuss with Pam, I'd be happy to connect you with him.
 
-[Ask Pam Directly →](${contactLink})
+Please use the contact form below and briefly describe what you need. You can include your name, email, subject, and message, and Pam will get back to you as soon as possible.
 
-Pam can review your message personally and get back to you.
+👉 [Contact Pam](#contact)
 
+I'm always happy to help you explore the information available in this portfolio.
 `.trim();
 }

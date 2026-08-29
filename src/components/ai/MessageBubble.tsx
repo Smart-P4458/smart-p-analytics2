@@ -2,9 +2,6 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import ResumeCard from "./ResumeCard";
-import CertificateCard from "./CertificateCard";
-
 type MessageBubbleProps = {
   sender: "assistant" | "user";
   text: string;
@@ -18,17 +15,29 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isAssistant = sender === "assistant";
 
-  const hasResumeCard =
-    isAssistant && text.includes("[RESUME_CARD]");
+  const handleLinkClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href?: string
+  ) => {
+    if (!href) return;
 
-  const hasCertificateCard =
-    isAssistant &&
-    text.includes("[CERTIFICATE_CARD]");
+    if (href.startsWith("#")) {
+      event.preventDefault();
 
-  const displayText = text
-    .replace("[RESUME_CARD]", "")
-    .replace("[CERTIFICATE_CARD]", "")
-    .trim();
+      const target = document.querySelector(href);
+
+      target?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      window.history.replaceState(
+        null,
+        "",
+        href
+      );
+    }
+  };
 
   return (
     <motion.div
@@ -39,7 +48,9 @@ export default function MessageBubble({
         duration: 0.25,
       }}
       className={`flex ${
-        isAssistant ? "justify-start" : "justify-end"
+        isAssistant
+          ? "justify-start"
+          : "justify-end"
       }`}
     >
       <div
@@ -75,26 +86,39 @@ export default function MessageBubble({
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ href, children }) => (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {children}
-                </a>
-              ),
+              a: ({ href, children }) => {
+                const isInternal =
+                  href?.startsWith("#");
+
+                return (
+                  <a
+                    href={href}
+                    target={
+                      isInternal
+                        ? undefined
+                        : "_blank"
+                    }
+                    rel={
+                      isInternal
+                        ? undefined
+                        : "noopener noreferrer"
+                    }
+                    onClick={(event) =>
+                      handleLinkClick(
+                        event,
+                        href
+                      )
+                    }
+                  >
+                    {children}
+                  </a>
+                );
+              },
             }}
           >
-            {displayText}
+            {text}
           </ReactMarkdown>
         </div>
-
-        {hasResumeCard && <ResumeCard />}
-
-        {hasCertificateCard && (
-          <CertificateCard />
-        )}
 
         {time && (
           <p

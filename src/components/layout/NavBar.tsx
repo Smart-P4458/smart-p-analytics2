@@ -1,6 +1,137 @@
-import { Menu } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  Menu,
+  X,
+} from "lucide-react";
+
+const navItems = [
+  "Home",
+  "About",
+  "Services",
+  "Projects",
+  "Skills",
+  "Testimonials",
+  "Contact",
+];
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] =
+    useState(false);
+
+  const menuRef =
+    useRef<HTMLDivElement>(null);
+
+  /* ----------------------------------------
+     Close menu when clicking outside
+  ---------------------------------------- */
+
+  useEffect(() => {
+    const handleClickOutside = (
+      event: MouseEvent
+    ) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(
+          event.target as Node
+        )
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    }
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, [isOpen]);
+
+  /* ----------------------------------------
+     Close menu with Escape
+  ---------------------------------------- */
+
+  useEffect(() => {
+    const handleEscape = (
+      event: KeyboardEvent
+    ) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+    };
+  }, []);
+
+  /* ----------------------------------------
+     Prevent background scrolling
+  ---------------------------------------- */
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  /* ----------------------------------------
+     Navigation
+  ---------------------------------------- */
+
+  const handleNavigation = (
+    item: string
+  ) => {
+    const targetId =
+      `#${item.toLowerCase()}`;
+
+    setIsOpen(false);
+
+    const target =
+      document.querySelector(targetId);
+
+    if (!target) return;
+
+    setTimeout(() => {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
+
+    window.history.replaceState(
+      null,
+      "",
+      targetId
+    );
+  };
+
   return (
     <header
       className="
@@ -14,7 +145,9 @@ export default function Navbar() {
       "
     >
       <div
+        ref={menuRef}
         className="
+          relative
           mx-auto
           flex
           h-20
@@ -32,6 +165,10 @@ export default function Navbar() {
 
         <a
           href="#home"
+          onClick={(event) => {
+            event.preventDefault();
+            handleNavigation("Home");
+          }}
           className="
             group
             flex
@@ -39,8 +176,6 @@ export default function Navbar() {
             gap-4
           "
         >
-          {/* Logo */}
-
           <img
             src="/branding/Smart-P-Logo.png"
             alt="Smart-P Analytics Logo"
@@ -54,8 +189,6 @@ export default function Navbar() {
               group-hover:rotate-3
             "
           />
-
-          {/* Brand */}
 
           <div>
             <h1
@@ -90,7 +223,7 @@ export default function Navbar() {
         </a>
 
         {/* ========================= */}
-        {/* Desktop Navigation */}
+        {/* DESKTOP NAVIGATION */}
         {/* ========================= */}
 
         <nav
@@ -101,18 +234,14 @@ export default function Navbar() {
             lg:flex
           "
         >
-          {[
-            "Home",
-            "About",
-            "Services",
-            "Projects",
-            "Skills",
-            "Testimonials",
-            "Contact",
-          ].map((item) => (
+          {navItems.map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase()}`}
+              onClick={(event) => {
+                event.preventDefault();
+                handleNavigation(item);
+              }}
               className="
                 relative
                 text-sm
@@ -138,15 +267,32 @@ export default function Navbar() {
         </nav>
 
         {/* ========================= */}
-        {/* Mobile Menu Button */}
+        {/* MOBILE MENU BUTTON */}
         {/* ========================= */}
 
         <button
+          type="button"
+          aria-label={
+            isOpen
+              ? "Close navigation menu"
+              : "Open navigation menu"
+          }
+          aria-expanded={isOpen}
+          onClick={() =>
+            setIsOpen((previous) => !previous)
+          }
           className="
-            rounded-lg
+            relative
+            z-[60]
+            flex
+            h-11
+            w-11
+            items-center
+            justify-center
+            rounded-xl
             border
             border-slate-700
-            p-2
+            bg-slate-900
             text-slate-300
             transition-all
             duration-300
@@ -154,10 +300,70 @@ export default function Navbar() {
             hover:text-blue-400
             lg:hidden
           "
-          aria-label="Open navigation menu"
         >
-          <Menu size={24} />
+          {isOpen ? (
+            <X size={24} />
+          ) : (
+            <Menu size={24} />
+          )}
         </button>
+
+        {/* ========================= */}
+        {/* MOBILE NAVIGATION */}
+        {/* ========================= */}
+
+        <div
+          className={`
+            absolute
+            left-4
+            right-4
+            top-[76px]
+            z-50
+            overflow-hidden
+            rounded-2xl
+            border
+            border-slate-800
+            bg-slate-950/98
+            shadow-2xl
+            backdrop-blur-xl
+            transition-all
+            duration-300
+            lg:hidden
+            ${
+              isOpen
+                ? "visible translate-y-0 opacity-100"
+                : "invisible -translate-y-3 opacity-0"
+            }
+          `}
+        >
+          <nav className="p-3">
+            {navItems.map((item) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleNavigation(item);
+                }}
+                className="
+                  block
+                  rounded-xl
+                  px-4
+                  py-3.5
+                  text-sm
+                  font-medium
+                  text-slate-300
+                  transition-all
+                  duration-200
+                  hover:bg-slate-900
+                  hover:text-blue-400
+                "
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
