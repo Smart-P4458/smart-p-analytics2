@@ -11,11 +11,12 @@ import type {
   AIContextType,
   AIState,
   Message,
+  MessageType,
 } from "./types";
 
-const AIContext = createContext<AIContextType | undefined>(
-  undefined
-);
+const AIContext = createContext<
+  AIContextType | undefined
+>(undefined);
 
 type ProviderProps = {
   children: ReactNode;
@@ -26,9 +27,9 @@ const WELCOME_MESSAGE: Message = {
   sender: "assistant",
   text: "Hello 👋 I'm Smart-P AI.\n\nHow can I help you today?",
   timestamp: "Now",
+  type: "text",
 };
 
-// Smart-P AI streaming settings
 const RESPONSE_START_DELAY = 300;
 const CHUNK_SIZE = 4;
 const CHUNK_DELAY = 15;
@@ -44,22 +45,77 @@ export function AIProvider({
   const sendMessage = (message: string) => {
     if (!message.trim()) return;
 
+    /* ---------------------------------------- */
+    /* Add User Message */
+    /* ---------------------------------------- */
+
     const userMessage: Message = {
       id: Date.now(),
       sender: "user",
       text: message,
       timestamp: "Now",
+      type: "text",
     };
 
     setState((prev) => ({
       ...prev,
-      messages: [...prev.messages, userMessage],
+      messages: [
+        ...prev.messages,
+        userMessage,
+      ],
       isTyping: true,
     }));
 
-    const fullResponse = generateResponse(message);
+    /* ---------------------------------------- */
+    /* Generate AI Response */
+    /* ---------------------------------------- */
+
+    const rawResponse = generateResponse(message);
+
+    let responseType: MessageType = "text";
+
+    /* Detect Certificate Card */
+
+    if (
+      rawResponse.includes(
+        "[CERTIFICATE_CARD]"
+      )
+    ) {
+      responseType = "certificate";
+    }
+
+    /* Detect Resume Card */
+
+    else if (
+      rawResponse.includes(
+        "[RESUME_CARD]"
+      )
+    ) {
+      responseType = "resume";
+    }
+
+    /* Remove Internal Card Commands */
+
+    const fullResponse = rawResponse
+      .replace(
+        "[CERTIFICATE_CARD]",
+        ""
+      )
+      .replace(
+        "[RESUME_CARD]",
+        ""
+      )
+      .trim();
+
+    /* ---------------------------------------- */
+    /* Create Assistant Message ID */
+    /* ---------------------------------------- */
 
     const assistantId = Date.now() + 1;
+
+    /* ---------------------------------------- */
+    /* Start AI Response */
+    /* ---------------------------------------- */
 
     setTimeout(() => {
       setState((prev) => ({
@@ -71,6 +127,7 @@ export function AIProvider({
             sender: "assistant",
             text: "",
             timestamp: "Now",
+            type: responseType,
           },
         ],
       }));
@@ -85,17 +142,23 @@ export function AIProvider({
 
         setState((prev) => ({
           ...prev,
-          messages: prev.messages.map((msg) =>
-            msg.id === assistantId
-              ? {
-                  ...msg,
-                  text: fullResponse.slice(0, index),
-                }
-              : msg
+          messages: prev.messages.map(
+            (msg) =>
+              msg.id === assistantId
+                ? {
+                    ...msg,
+                    text: fullResponse.slice(
+                      0,
+                      index
+                    ),
+                  }
+                : msg
           ),
         }));
 
-        if (index >= fullResponse.length) {
+        if (
+          index >= fullResponse.length
+        ) {
           clearInterval(interval);
 
           setState((prev) => ({
@@ -107,9 +170,15 @@ export function AIProvider({
     }, RESPONSE_START_DELAY);
   };
 
+  /* ---------------------------------------- */
+  /* Clear Chat */
+  /* ---------------------------------------- */
+
   const clearChat = () => {
     setState({
-      messages: [WELCOME_MESSAGE],
+      messages: [
+        WELCOME_MESSAGE,
+      ],
       isTyping: false,
     });
   };

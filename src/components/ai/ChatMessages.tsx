@@ -9,6 +9,9 @@ import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import QuickSuggestions from "./QuickSuggestions";
 
+import ResumeCard from "./ResumeCard";
+import CertificateCard from "./CertificateCard";
+
 export default function ChatMessages() {
   const { state } = useAI();
 
@@ -20,14 +23,29 @@ export default function ChatMessages() {
 
   const showSuggestions =
     state.messages.length === 1 &&
-    state.messages[0].sender === "assistant";
+    state.messages[0].sender ===
+      "assistant";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
-      behavior: "auto",
+      behavior: "smooth",
       block: "end",
     });
   }, [state.messages]);
+
+  useEffect(() => {
+    if (!state.isTyping) return;
+
+    const interval = setInterval(() => {
+      bottomRef.current?.scrollIntoView({
+        behavior: "auto",
+        block: "end",
+      });
+    }, 25);
+
+    return () =>
+      clearInterval(interval);
+  }, [state.isTyping]);
 
   return (
     <div
@@ -41,14 +59,48 @@ export default function ChatMessages() {
       "
     >
       <div className="space-y-4">
-        {state.messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            sender={message.sender}
-            text={message.text}
-            time={message.timestamp}
-          />
-        ))}
+        {state.messages.map(
+          (message) => (
+            <div
+              key={message.id}
+              className="space-y-3"
+            >
+              <MessageBubble
+                sender={message.sender}
+                text={message.text}
+                time={
+                  message.timestamp
+                }
+              />
+
+              {/* Resume Card */}
+
+              {message.sender ===
+                "assistant" &&
+                message.type ===
+                  "resume" &&
+                message.text.length >
+                  0 && (
+                  <div className="flex justify-start">
+                    <ResumeCard />
+                  </div>
+                )}
+
+              {/* Certificate Card */}
+
+              {message.sender ===
+                "assistant" &&
+                message.type ===
+                  "certificate" &&
+                message.text.length >
+                  0 && (
+                  <div className="flex justify-start">
+                    <CertificateCard />
+                  </div>
+                )}
+            </div>
+          )
+        )}
 
         {state.isTyping && (
           <TypingIndicator />
