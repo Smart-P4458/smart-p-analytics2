@@ -1,133 +1,173 @@
 /// <reference types="node" />
-const MAKE_WEBHOOK_URL =
-  process.env.MAKE_WEBHOOK_URL;
+import type {
+  Handler,
+  HandlerEvent,
+  HandlerResponse,
+} from "@netlify/functions";
 
-export default async function handler(
-  request: Request
-) {
-  if (request.method !== "POST") {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Method not allowed.",
-      }),
+const jsonResponse = (
+  statusCode: number,
+  body: unknown,
+  extraHeaders: Record<string, string> = {}
+): HandlerResponse => {
+  return {
+    statusCode,
+
+    headers: {
+      "Content-Type":
+        "application/json",
+
+      ...extraHeaders,
+    },
+
+    body: JSON.stringify(body),
+  };
+};
+
+export const handler: Handler = async (
+  event: HandlerEvent
+): Promise<HandlerResponse> => {
+  if (
+    event.httpMethod !== "POST"
+  ) {
+    return jsonResponse(
+      405,
       {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  }
-
-  if (!MAKE_WEBHOOK_URL) {
-    console.error(
-      "MAKE_WEBHOOK_URL is not configured."
-    );
-
-    return new Response(
-      JSON.stringify({
         success: false,
-        message: "Server configuration error.",
-      }),
+        message:
+          "Method not allowed.",
+      },
       {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        Allow: "POST",
       }
     );
   }
 
   try {
-    const body = await request.json();
+    if (!event.body) {
+      return jsonResponse(
+        400,
+        {
+          success: false,
+          message:
+            "Request body is required.",
+        }
+      );
+    }
+
+    const data =
+      JSON.parse(event.body);
 
     const {
       fullName,
       email,
       phone,
       subject,
-      notes,
+      message,
       source,
-      submittedAt,
-    } = body;
+    } = data;
 
     if (
-      !fullName?.trim() ||
-      !email?.trim() ||
-      !subject?.trim() ||
-      !notes?.trim()
+      !fullName ||
+      !email ||
+      !subject ||
+      !message
     ) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        400,
+        {
           success: false,
           message:
             "Please complete all required fields.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
         }
       );
     }
 
-    const makeResponse = await fetch(
-      MAKE_WEBHOOK_URL,
+    const webhookUrl =
+      process.env.MAKE_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+      console.error(
+        "MAKE_WEBHOOK_URL is missing."
+      );
+
+      return jsonResponse(
+        500,
+        {
+          success: false,
+          message:
+            "Server configuration error.",
+        }
+      );
+    }
+
+    console.log(
+      "Sending contact submission to Make:",
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: fullName.trim(),
-          email: email.trim(),
-          phone: phone?.trim() || "",
-          subject: subject.trim(),
-          notes: notes.trim(),
-          source:
-            source ||
-            "Smart-P Analytics Portfolio",
-          submittedAt:
-            submittedAt ||
-            new Date().toISOString(),
-        }),
+        fullName,
+        email,
+        phone,
+        subject,
+        message,
+        source,
       }
     );
 
-    if (!makeResponse.ok) {
-      console.error(
-        "Make webhook returned:",
-        makeResponse.status
+    const response =
+      await fetch(
+        webhookUrl,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            fullName,
+            email,
+            phone,
+            subject,
+            message,
+
+            source:
+              source ||
+              "Smart-P Analytics Portfolio Website",
+
+            submittedAt:
+              new Date().toISOString(),
+          }),
+        }
       );
 
-      return new Response(
-        JSON.stringify({
+    if (!response.ok) {
+      const errorText =
+        await response.text();
+
+      console.error(
+        "Make webhook error:",
+        response.status,
+        errorText
+      );
+
+      return jsonResponse(
+        502,
+        {
           success: false,
           message:
-            "Unable to send your message. Please try again.",
-        }),
-        {
-          status: 502,
-          headers: {
-            "Content-Type": "application/json",
-          },
+            "Unable to send your message right now. Please try again.",
         }
       );
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      200,
+      {
         success: true,
+
         message:
           "Your message has been sent successfully.",
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }
     );
   } catch (error) {
@@ -136,18 +176,14 @@ export default async function handler(
       error
     );
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      500,
+      {
         success: false,
+
         message:
           "Something went wrong. Please try again.",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }
     );
   }
-}
+};

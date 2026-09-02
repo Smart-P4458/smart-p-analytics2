@@ -1,4 +1,8 @@
-import { Download, FileText, ExternalLink } from "lucide-react";
+import {
+  Download,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
 
 const RESUME_URL =
   "/documents/Pam-Sani-George - Data-Analyst-Resume.pdf";
@@ -41,7 +45,7 @@ export default function ResumeCard() {
           </h3>
 
           <p className="text-sm text-slate-400">
-            Professional Resume
+            Professional Data Analyst Resume
           </p>
         </div>
       </div>
@@ -77,6 +81,7 @@ export default function ResumeCard() {
           rel="noopener noreferrer"
           className="
             inline-flex
+            flex-1
             items-center
             justify-center
             gap-2

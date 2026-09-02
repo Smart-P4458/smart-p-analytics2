@@ -1,4 +1,4 @@
-import type { KnowledgeSection } from "./types";
+import type { KnowledgeSection } from "./Types";
 
 export const knowledgeBase: KnowledgeSection[] = [
   {

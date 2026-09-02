@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import {
-  Send,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+  useState,
+  type SyntheticEvent,
+} from "react";
+
+import { motion } from "framer-motion";
+import { Send } from "lucide-react";
 
 import { fadeRight } from "./ContactAnimation";
 
@@ -29,159 +29,70 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  const [isSuccess, setIsSuccess] =
-    useState(false);
+  const [status, setStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
-  const [error, setError] = useState("");
-
-  /*
-   * ----------------------------------------
-   * AI CONTACT PREFILL
-   * ----------------------------------------
-   *
-   * Smart-P AI can send the visitor here with:
-   *
-   * ?contact=1
-   * &subject=...
-   * &message=...
-   *
-   * The form reads those values and pre-fills
-   * the Subject and Message fields.
-   */
-
-  useEffect(() => {
-  const params = new URLSearchParams(
-    window.location.search
-  );
-
-  const shouldPrefill =
-    params.get("contact") === "1";
-
-  if (!shouldPrefill) return;
-
-  const subject =
-    params.get("subject") || "";
-
-  const message =
-    params.get("message") || "";
-
-  setFormData((prev) => ({
-    ...prev,
-    subject,
-    message,
-  }));
-
-  const cleanUrl =
-    window.location.pathname +
-    window.location.hash;
-
-  window.history.replaceState(
-    {},
-    document.title,
-    cleanUrl
-  );
-}, []);
-
-  /*
-   * ----------------------------------------
-   * FORM INPUT HANDLER
-   * ----------------------------------------
-   */
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setError("");
-    setIsSuccess(false);
-  };
-
-  /*
-   * ----------------------------------------
-   * FORM SUBMISSION
-   * ----------------------------------------
-   */
+  const [statusMessage, setStatusMessage] =
+    useState("");
 
   const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
+    event: SyntheticEvent<HTMLFormElement>
   ) => {
-    e.preventDefault();
+    event.preventDefault();
 
-    setError("");
-    setIsSuccess(false);
-
-    if (!formData.fullName.trim()) {
-      setError("Please enter your full name.");
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setError(
-        "Please enter your email address."
-      );
-      return;
-    }
-
-    if (!formData.subject.trim()) {
-      setError("Please enter a subject.");
-      return;
-    }
-
-    if (!formData.message.trim()) {
-      setError("Please enter your message.");
-      return;
-    }
+    setIsSubmitting(true);
+    setStatus("idle");
+    setStatusMessage("");
 
     try {
-      setIsSubmitting(true);
-
       const response = await fetch(
-  "/.netlify/functions/contact",
+        "/.netlify/functions/contact",
         {
           method: "POST",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
+
           body: JSON.stringify({
             fullName:
-              formData.fullName.trim(),
+              formData.fullName,
 
             email:
-              formData.email.trim(),
+              formData.email,
 
             phone:
-              formData.phone.trim(),
+              formData.phone,
 
             subject:
-              formData.subject.trim(),
+              formData.subject,
 
-            notes:
-              formData.message.trim(),
+            message:
+              formData.message,
 
             source:
-              "Smart-P Analytics Portfolio",
-
-            submittedAt:
-              new Date().toISOString(),
+              "Smart-P Analytics Portfolio Website",
           }),
         }
       );
 
+      const result =
+        await response.json();
+
       if (!response.ok) {
         throw new Error(
-          "Unable to submit the form."
+          result.message ||
+            "Unable to send your message."
         );
       }
 
-      setIsSuccess(true);
+      setStatus("success");
+
+      setStatusMessage(
+        "Thank you! Your message has been sent successfully."
+      );
 
       setFormData({
         fullName: "",
@@ -190,14 +101,18 @@ export default function ContactForm() {
         subject: "",
         message: "",
       });
-    } catch (err) {
+    } catch (error) {
       console.error(
-        "Contact form submission error:",
-        err
+        "Contact form error:",
+        error
       );
 
-      setError(
-        "Something went wrong while sending your message. Please try again."
+      setStatus("error");
+
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -218,69 +133,6 @@ export default function ContactForm() {
         backdrop-blur-sm
       "
     >
-      {/* Success */}
-
-      {isSuccess && (
-        <div
-          className="
-            flex
-            items-start
-            gap-3
-            rounded-xl
-            border
-            border-emerald-500/30
-            bg-emerald-500/10
-            p-4
-            text-emerald-300
-          "
-        >
-          <CheckCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <div>
-            <p className="font-semibold">
-              Message sent successfully!
-            </p>
-
-            <p className="mt-1 text-sm text-emerald-300/80">
-              Thank you for reaching out.
-              Pam has received your message
-              and will get back to you as soon
-              as possible.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Error */}
-
-      {error && (
-        <div
-          className="
-            flex
-            items-start
-            gap-3
-            rounded-xl
-            border
-            border-red-500/30
-            bg-red-500/10
-            p-4
-            text-red-300
-          "
-        >
-          <AlertCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <p className="text-sm">
-            {error}
-          </p>
-        </div>
-      )}
-
       {/* Full Name */}
 
       <div>
@@ -299,13 +151,17 @@ export default function ContactForm() {
 
         <input
           id="fullName"
-          name="fullName"
           type="text"
+          required
           value={formData.fullName}
-          onChange={handleChange}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              fullName:
+                event.target.value,
+            })
+          }
           placeholder="Your Full Name"
-          autoComplete="name"
-          disabled={isSubmitting}
           className="
             w-full
             rounded-xl
@@ -322,8 +178,6 @@ export default function ContactForm() {
             focus:border-blue-500
             focus:ring-2
             focus:ring-blue-500/20
-            disabled:cursor-not-allowed
-            disabled:opacity-60
           "
         />
       </div>
@@ -346,13 +200,17 @@ export default function ContactForm() {
 
         <input
           id="email"
-          name="email"
           type="email"
+          required
           value={formData.email}
-          onChange={handleChange}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              email:
+                event.target.value,
+            })
+          }
           placeholder="your@email.com"
-          autoComplete="email"
-          disabled={isSubmitting}
           className="
             w-full
             rounded-xl
@@ -369,8 +227,6 @@ export default function ContactForm() {
             focus:border-blue-500
             focus:ring-2
             focus:ring-blue-500/20
-            disabled:cursor-not-allowed
-            disabled:opacity-60
           "
         />
       </div>
@@ -389,20 +245,20 @@ export default function ContactForm() {
           "
         >
           Phone Number
-          <span className="ml-2 text-xs text-slate-500">
-            Optional
-          </span>
         </label>
 
         <input
           id="phone"
-          name="phone"
           type="tel"
           value={formData.phone}
-          onChange={handleChange}
-          placeholder="Your Phone Number"
-          autoComplete="tel"
-          disabled={isSubmitting}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              phone:
+                event.target.value,
+            })
+          }
+          placeholder="+234 800 000 0000"
           className="
             w-full
             rounded-xl
@@ -419,8 +275,6 @@ export default function ContactForm() {
             focus:border-blue-500
             focus:ring-2
             focus:ring-blue-500/20
-            disabled:cursor-not-allowed
-            disabled:opacity-60
           "
         />
       </div>
@@ -443,12 +297,17 @@ export default function ContactForm() {
 
         <input
           id="subject"
-          name="subject"
           type="text"
+          required
           value={formData.subject}
-          onChange={handleChange}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              subject:
+                event.target.value,
+            })
+          }
           placeholder="What's Your Discussion Topic?"
-          disabled={isSubmitting}
           className="
             w-full
             rounded-xl
@@ -465,8 +324,6 @@ export default function ContactForm() {
             focus:border-blue-500
             focus:ring-2
             focus:ring-blue-500/20
-            disabled:cursor-not-allowed
-            disabled:opacity-60
           "
         />
       </div>
@@ -489,12 +346,17 @@ export default function ContactForm() {
 
         <textarea
           id="message"
-          name="message"
           rows={6}
+          required
           value={formData.message}
-          onChange={handleChange}
+          onChange={(event) =>
+            setFormData({
+              ...formData,
+              message:
+                event.target.value,
+            })
+          }
           placeholder="Tell me about your project..."
-          disabled={isSubmitting}
           className="
             w-full
             resize-none
@@ -512,11 +374,30 @@ export default function ContactForm() {
             focus:border-blue-500
             focus:ring-2
             focus:ring-blue-500/20
-            disabled:cursor-not-allowed
-            disabled:opacity-60
           "
         />
       </div>
+
+      {/* Status Message */}
+
+      {status !== "idle" && (
+        <div
+          className={`
+            rounded-xl
+            border
+            px-4
+            py-3
+            text-sm
+            ${
+              status === "success"
+                ? "border-green-500/30 bg-green-500/10 text-green-400"
+                : "border-red-500/30 bg-red-500/10 text-red-400"
+            }
+          `}
+        >
+          {statusMessage}
+        </div>
+      )}
 
       {/* Submit */}
 
@@ -541,18 +422,11 @@ export default function ContactForm() {
           hover:bg-blue-700
           active:scale-[0.98]
           disabled:cursor-not-allowed
-          disabled:scale-100
           disabled:opacity-60
+          disabled:hover:scale-100
         "
       >
-        <Send
-          size={20}
-          className={
-            isSubmitting
-              ? "animate-pulse"
-              : ""
-          }
-        />
+        <Send size={20} />
 
         {isSubmitting
           ? "Sending..."
