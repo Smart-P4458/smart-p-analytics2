@@ -16,30 +16,48 @@ type FormData = {
   message: string;
 };
 
+type FormStatus =
+  | "idle"
+  | "success"
+  | "error";
+
+const INITIAL_FORM_DATA: FormData = {
+  fullName: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+};
+
 export default function ContactForm() {
   const [formData, setFormData] =
-    useState<FormData>({
-      fullName: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: "",
-    });
+    useState<FormData>(INITIAL_FORM_DATA);
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  const [status, setStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [status, setStatus] =
+    useState<FormStatus>("idle");
 
   const [statusMessage, setStatusMessage] =
     useState("");
+
+  const updateField = (
+    field: keyof FormData,
+    value: string
+  ) => {
+    setFormData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
 
   const handleSubmit = async (
     event: SyntheticEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     setStatus("idle");
@@ -52,55 +70,60 @@ export default function ContactForm() {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
 
           body: JSON.stringify({
-            fullName:
-              formData.fullName,
-
-            email:
-              formData.email,
-
-            phone:
-              formData.phone,
-
-            subject:
-              formData.subject,
-
-            message:
-              formData.message,
-
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            subject: formData.subject.trim(),
+            message: formData.message.trim(),
             source:
               "Smart-P Analytics Portfolio Website",
           }),
         }
       );
 
-      const result =
-        await response.json();
+      /*
+        Read the response safely as text first.
+
+        This prevents:
+        "Unexpected end of JSON input"
+
+        when the Netlify function returns an
+        empty response body.
+      */
+      const responseText =
+        await response.text();
+
+      let result: {
+        message?: string;
+      } = {};
+
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          result = {};
+        }
+      }
 
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Unable to send your message."
+            `Unable to send your message. Server responded with status ${response.status}.`
         );
       }
 
       setStatus("success");
 
       setStatusMessage(
-        "Thank you! Your message has been sent successfully."
+        result.message ||
+          "Thank you! Your message has been sent successfully."
       );
 
-      setFormData({
-        fullName: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
+      setFormData(INITIAL_FORM_DATA);
     } catch (error) {
       console.error(
         "Contact form error:",
@@ -155,11 +178,10 @@ export default function ContactForm() {
           required
           value={formData.fullName}
           onChange={(event) =>
-            setFormData({
-              ...formData,
-              fullName:
-                event.target.value,
-            })
+            updateField(
+              "fullName",
+              event.target.value
+            )
           }
           placeholder="Your Full Name"
           className="
@@ -204,11 +226,10 @@ export default function ContactForm() {
           required
           value={formData.email}
           onChange={(event) =>
-            setFormData({
-              ...formData,
-              email:
-                event.target.value,
-            })
+            updateField(
+              "email",
+              event.target.value
+            )
           }
           placeholder="your@email.com"
           className="
@@ -252,11 +273,10 @@ export default function ContactForm() {
           type="tel"
           value={formData.phone}
           onChange={(event) =>
-            setFormData({
-              ...formData,
-              phone:
-                event.target.value,
-            })
+            updateField(
+              "phone",
+              event.target.value
+            )
           }
           placeholder="+234 800 000 0000"
           className="
@@ -301,11 +321,10 @@ export default function ContactForm() {
           required
           value={formData.subject}
           onChange={(event) =>
-            setFormData({
-              ...formData,
-              subject:
-                event.target.value,
-            })
+            updateField(
+              "subject",
+              event.target.value
+            )
           }
           placeholder="What's Your Discussion Topic?"
           className="
@@ -350,11 +369,10 @@ export default function ContactForm() {
           required
           value={formData.message}
           onChange={(event) =>
-            setFormData({
-              ...formData,
-              message:
-                event.target.value,
-            })
+            updateField(
+              "message",
+              event.target.value
+            )
           }
           placeholder="Tell me about your project..."
           className="
@@ -382,6 +400,7 @@ export default function ContactForm() {
 
       {status !== "idle" && (
         <div
+          role="status"
           className={`
             rounded-xl
             border
