@@ -12,7 +12,7 @@ import type {
   AIState,
   Message,
   MessageType,
-} from "./types";
+} from "./Types";
 
 const AIContext = createContext<
   AIContextType | undefined

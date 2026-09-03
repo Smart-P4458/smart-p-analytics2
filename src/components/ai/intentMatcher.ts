@@ -1,5 +1,5 @@
 import { knowledgeBase } from "./knowledge";
-import type { KnowledgeSection } from "./types";
+import type { KnowledgeSection } from "./Types";
 
 /**
  * Normalizes text so different ways of asking a question
