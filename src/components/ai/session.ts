@@ -1,10 +1,10 @@
-const SESSION_KEY =
+const SESSION_STORAGE_KEY =
   "smart-p-ai-session-id";
 
-export function getSessionId(): string {
+export function getSessionId() {
   const existingSessionId =
     localStorage.getItem(
-      SESSION_KEY
+      SESSION_STORAGE_KEY
     );
 
   if (existingSessionId) {
@@ -15,7 +15,7 @@ export function getSessionId(): string {
     crypto.randomUUID();
 
   localStorage.setItem(
-    SESSION_KEY,
+    SESSION_STORAGE_KEY,
     newSessionId
   );
 

@@ -1,45 +1,69 @@
-import { getSessionId } from "./session";
+type Sender =
+  | "user"
+  | "assistant";
 
-type SaveChatParams = {
+type SaveChatMessageInput = {
+  sessionId: string;
   message: string;
-  response: string;
-  isAnswered: boolean;
+  sender: Sender;
+  messageType?: string;
+  isAnswered?: boolean;
 };
 
-export async function saveChatMessage({
-  message,
-  response,
-  isAnswered,
-}: SaveChatParams) {
-  try {
-    const sessionId =
-      getSessionId();
+type SaveChatMessageResponse = {
+  success: boolean;
+  conversationId?: string;
+  messageId?: string;
+  message?: string;
+};
 
-    await fetch(
-      "/.netlify/functions/chat",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          sessionId,
-          message,
-          response,
-          isAnswered,
-        }),
-      }
-    );
-  } catch (error) {
-    /*
-      Chat saving should never stop
-      the AI interface from working.
-    */
+export async function saveChatMessage(
+  input: SaveChatMessageInput
+): Promise<SaveChatMessageResponse> {
+  const response = await fetch(
+    "/.netlify/functions/chat",
+    {
+      method: "POST",
 
-    console.error(
-      "Unable to save chat:",
-      error
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+
+      body: JSON.stringify(input),
+    }
+  );
+
+  const text =
+    await response.text();
+
+  let result:
+    | SaveChatMessageResponse
+    | undefined;
+
+  if (text) {
+    try {
+      result =
+        JSON.parse(
+          text
+        ) as SaveChatMessageResponse;
+    } catch {
+      throw new Error(
+        "The server returned an invalid response."
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      result?.message ||
+        "Unable to save chat message."
     );
   }
+
+  return (
+    result ?? {
+      success: true,
+    }
+  );
 }

@@ -5,6 +5,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { saveChatMessage } from "./chatApi";
+import { getSessionId } from "./session";
 import { generateResponse } from "./responseGenerator";
 
 import type {
@@ -43,16 +45,36 @@ export function AIProvider({
   });
 
   const sendMessage = (message: string) => {
-    if (!message.trim()) return;
+    const cleanMessage = message.trim();
+
+    if (!cleanMessage) return;
+
+    const sessionId = getSessionId();
 
     /* ---------------------------------------- */
-    /* Add User Message */
+    /* Save User Message */
+    /* ---------------------------------------- */
+
+    void saveChatMessage({
+      sessionId,
+      message: cleanMessage,
+      sender: "user",
+      messageType: "text",
+    }).catch((error) => {
+      console.error(
+        "Failed to save user chat message:",
+        error
+      );
+    });
+
+    /* ---------------------------------------- */
+    /* Add User Message to UI */
     /* ---------------------------------------- */
 
     const userMessage: Message = {
       id: Date.now(),
       sender: "user",
-      text: message,
+      text: cleanMessage,
       timestamp: "Now",
       type: "text",
     };
@@ -70,11 +92,10 @@ export function AIProvider({
     /* Generate AI Response */
     /* ---------------------------------------- */
 
-    const rawResponse = generateResponse(message);
+    const rawResponse =
+      generateResponse(cleanMessage);
 
     let responseType: MessageType = "text";
-
-    /* Detect Certificate Card */
 
     if (
       rawResponse.includes(
@@ -82,11 +103,7 @@ export function AIProvider({
       )
     ) {
       responseType = "certificate";
-    }
-
-    /* Detect Resume Card */
-
-    else if (
+    } else if (
       rawResponse.includes(
         "[RESUME_CARD]"
       )
@@ -94,7 +111,9 @@ export function AIProvider({
       responseType = "resume";
     }
 
+    /* ---------------------------------------- */
     /* Remove Internal Card Commands */
+    /* ---------------------------------------- */
 
     const fullResponse = rawResponse
       .replace(
@@ -156,10 +175,30 @@ export function AIProvider({
           ),
         }));
 
+        /* ---------------------------------------- */
+        /* Response Completed */
+        /* ---------------------------------------- */
+
         if (
           index >= fullResponse.length
         ) {
           clearInterval(interval);
+
+          /* ---------------------------------------- */
+          /* Save Assistant Message */
+          /* ---------------------------------------- */
+
+          void saveChatMessage({
+            sessionId,
+            message: fullResponse,
+            sender: "assistant",
+            messageType: responseType,
+          }).catch((error) => {
+            console.error(
+              "Failed to save assistant response:",
+              error
+            );
+          });
 
           setState((prev) => ({
             ...prev,
@@ -197,7 +236,8 @@ export function AIProvider({
 }
 
 export function useAI() {
-  const context = useContext(AIContext);
+  const context =
+    useContext(AIContext);
 
   if (!context) {
     throw new Error(
