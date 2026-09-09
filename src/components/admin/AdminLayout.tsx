@@ -1,23 +1,35 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
 
 export default function AdminLayout() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const openSidebar = () => {
+    setIsSidebarOpen(true);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <AdminSidebar />
+      <AdminSidebar
+        isOpen={isSidebarOpen}
+        onClose={closeSidebar}
+      />
 
-        {/* Main Admin Area */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <AdminHeader />
+      <div className="min-h-screen lg:pl-64">
+        <AdminHeader onMenuClick={openSidebar} />
 
-          <main className="flex-1 overflow-x-hidden p-6 lg:p-8">
+        <main className="min-h-[calc(100vh-73px)] overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1600px]">
             <Outlet />
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
