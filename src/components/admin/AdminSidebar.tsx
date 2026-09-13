@@ -82,7 +82,20 @@ export default function AdminSidebar({
       >
         <div className="flex h-full flex-col">
           {/* Brand */}
-          <div className="flex h-[73px] shrink-0 items-center justify-between border-b border-slate-800 px-5">
+          <div className="flex h-[73px] shrink-0 items-center justify-between border-b border-slate-800 px-6">
+            <img
+            src="/branding/Smart-P-Logo.png"
+            alt="Smart-P Analytics Logo"
+            className="
+              h-14
+              w-14
+              object-contain
+              transition-all
+              duration-300
+              group-hover:scale-110
+              group-hover:rotate-3
+            "
+          />
             <div className="min-w-0">
               <p className="truncate text-base font-bold text-white">
                 Smart-P Analytics
