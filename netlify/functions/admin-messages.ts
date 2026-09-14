@@ -1,72 +1,87 @@
-import type {
-  Handler,
-  HandlerResponse,
-} from "@netlify/functions";
-
+import type { Handler } from "@netlify/functions";
 import { supabase } from "./_supabase";
 
-const jsonResponse = (
-  statusCode: number,
-  body: unknown
-): HandlerResponse => ({
-  statusCode,
-  headers: {
-    "Content-Type": "application/json",
-    "Cache-Control": "no-store",
-  },
-  body: JSON.stringify(body),
-});
+export const handler: Handler = async (event) => {
+  if (event.httpMethod !== "GET") {
+    return {
+      statusCode: 405,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: "Method not allowed.",
+      }),
+    };
+  }
 
-export const handler: Handler = async (
-  event
-) => {
+  const conversationId =
+    event.queryStringParameters?.conversationId;
+
+  if (!conversationId) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: "conversationId is required.",
+      }),
+    };
+  }
+
   try {
-    const conversationId =
-      event.queryStringParameters
-        ?.conversationId;
-
-    if (!conversationId) {
-      return jsonResponse(400, {
-        message:
-          "conversationId is required.",
+    const { data, error } = await supabase
+      .from("messages")
+      .select(
+        `
+        id,
+        conversation_id,
+        sender,
+        message_type,
+        content,
+        is_answered,
+        created_at
+        `
+      )
+      .eq("conversation_id", conversationId)
+      .order("created_at", {
+        ascending: true,
       });
-    }
-
-    const { data, error } =
-      await supabase
-        .from("messages")
-        .select(
-          "id, conversation_id, sender, message_type, content, is_answered, created_at"
-        )
-        .eq(
-          "conversation_id",
-          conversationId
-        )
-        .order("created_at", {
-          ascending: true,
-        });
 
     if (error) {
-      console.error(
-        "Admin messages query error:",
-        error
-      );
+      console.error("Admin messages query error:", error);
 
-      return jsonResponse(500, {
-        message:
-          "Unable to load conversation messages.",
-      });
+      return {
+        statusCode: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Unable to load conversation messages.",
+          details: error.message,
+        }),
+      };
     }
 
-    return jsonResponse(200, data ?? []);
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+      body: JSON.stringify(data ?? []),
+    };
   } catch (error) {
-    console.error(
-      "Admin messages function error:",
-      error
-    );
+    console.error("Admin messages function error:", error);
 
-    return jsonResponse(500, {
-      message: "Internal server error.",
-    });
+    return {
+      statusCode: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: "Unexpected error loading conversation messages.",
+      }),
+    };
   }
 };

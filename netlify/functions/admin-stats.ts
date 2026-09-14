@@ -4,6 +4,7 @@ import type {
 } from "@netlify/functions";
 
 import { supabase } from "./_supabase";
+
 const jsonResponse = (
   statusCode: number,
   body: unknown
@@ -40,16 +41,7 @@ export const handler: Handler = async () => {
         }),
 
       supabase
-        .from("messages")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("sender", "user")
-        .eq("is_answered", false),
-
-      supabase
-        .from("contact_submissions")
+        .from("unanswered_questions")
         .select("id", {
           count: "exact",
           head: true,
@@ -60,30 +52,54 @@ export const handler: Handler = async () => {
         .select("id", {
           count: "exact",
           head: true,
+        }),
+
+      supabase
+        .from("automation_failures")
+        .select("id", {
+          count: "exact",
+          head: true,
         })
-        .eq("automation_status", "failed"),
+        .eq("status", "failed"),
     ]);
 
     const results = [
-      conversationsResult,
-      messagesResult,
-      unansweredResult,
-      contactsResult,
-      failuresResult,
+      {
+        name: "conversations",
+        result: conversationsResult,
+      },
+      {
+        name: "messages",
+        result: messagesResult,
+      },
+      {
+        name: "unanswered_questions",
+        result: unansweredResult,
+      },
+      {
+        name: "contact_submissions",
+        result: contactsResult,
+      },
+      {
+        name: "automation_failures",
+        result: failuresResult,
+      },
     ];
 
     const failedQuery = results.find(
-      (result) => result.error
+      ({ result }) => result.error
     );
 
-    if (failedQuery?.error) {
+    if (failedQuery?.result.error) {
       console.error(
-        "Admin stats query error:",
-        failedQuery.error
+        `Admin stats query failed: ${failedQuery.name}`,
+        failedQuery.result.error
       );
 
       return jsonResponse(500, {
         message: "Unable to load admin statistics.",
+        query: failedQuery.name,
+        details: failedQuery.result.error.message,
       });
     }
 
@@ -111,6 +127,10 @@ export const handler: Handler = async () => {
 
     return jsonResponse(500, {
       message: "Internal server error.",
+      details:
+        error instanceof Error
+          ? error.message
+          : "Unknown error.",
     });
   }
 };

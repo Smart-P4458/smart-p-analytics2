@@ -59,38 +59,13 @@ export async function getConversations(): Promise<
 export async function getConversationMessages(
   conversationId: string
 ): Promise<Message[]> {
-  const response = await fetch(
-    `${FUNCTIONS_BASE}/admin-messages?conversationId=${encodeURIComponent(
-      conversationId
-    )}`
+  const params = new URLSearchParams({
+    conversationId,
+  });
+
+  return request<Message[]>(
+    `admin-messages?${params.toString()}`
   );
-
-  const contentType =
-    response.headers.get("content-type");
-
-  if (!response.ok) {
-    const errorText =
-      contentType?.includes("application/json")
-        ? await response.json()
-        : await response.text();
-
-    const message =
-      typeof errorText === "object" &&
-      errorText !== null &&
-      "message" in errorText
-        ? String(errorText.message)
-        : "Unable to load conversation messages.";
-
-    throw new Error(message);
-  }
-
-  if (!contentType?.includes("application/json")) {
-    throw new Error(
-      "The server returned an invalid response."
-    );
-  }
-
-  return response.json() as Promise<Message[]>;
 }
 
 export async function getContacts(): Promise<
@@ -113,6 +88,6 @@ export async function getAutomationFailures(): Promise<
   AutomationFailure[]
 > {
   return request<AutomationFailure[]>(
-    "admin-failures"
+    "admin-automation-failures"
   );
 }

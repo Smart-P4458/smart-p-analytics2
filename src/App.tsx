@@ -19,6 +19,7 @@ import ConversationTable from "./components/admin/ConversationTable";
 import ContactInbox from "./components/admin/ContactInbox";
 import UnansweredQuestions from "./components/admin/UnansweredQuestions";
 import AutomationFailures from "./components/admin/AutomationFailures";
+import ConversationDetails from "./components/admin/ConversationDetails";
 
 export default function App() {
   return (
@@ -143,6 +144,12 @@ export default function App() {
           element={<AutomationFailures />}
         />
       </Route>
+
+        {/* /admin/conversations/:conversationId */}
+      <Route
+          path="/admin/conversations/:conversationId"
+          element={<ConversationDetails />}
+        />
 
       {/* ========================================
           404

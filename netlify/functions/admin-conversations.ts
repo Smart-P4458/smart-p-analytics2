@@ -19,15 +19,21 @@ const jsonResponse = (
 
 export const handler: Handler = async () => {
   try {
-    const { data, error } =
-      await supabase
-        .from("conversations")
-        .select(
-          "id, visitor_id, session_id, status, created_at, updated_at"
-        )
-        .order("updated_at", {
-          ascending: false,
-        });
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(
+        `
+          id,
+          visitor_id,
+          session_id,
+          status,
+          created_at,
+          updated_at
+        `
+      )
+      .order("updated_at", {
+        ascending: false,
+      });
 
     if (error) {
       console.error(
@@ -36,8 +42,7 @@ export const handler: Handler = async () => {
       );
 
       return jsonResponse(500, {
-        message:
-          "Unable to load conversations.",
+        message: "Unable to load conversations.",
       });
     }
 
