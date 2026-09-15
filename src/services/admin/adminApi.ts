@@ -8,6 +8,8 @@ import type {
   AutomationFailure,
 } from "./adminTypes";
 
+import { supabase } from "../../lib/supabase";
+
 const FUNCTIONS_BASE = "/.netlify/functions";
 
 type RequestOptions = {
@@ -19,12 +21,23 @@ async function request<T>(
   functionName: string,
   options: RequestOptions = {}
 ): Promise<T> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error(
+      "Your admin session has expired. Please sign in again."
+    );
+  }
+
   const response = await fetch(
     `${FUNCTIONS_BASE}/${functionName}`,
     {
       method: options.method ?? "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
       },
       ...(options.body !== undefined
         ? {
@@ -48,7 +61,15 @@ async function request<T>(
       errorText !== null &&
       "message" in errorText
         ? String(errorText.message)
-        : "Unable to load admin data.";
+        : response.status === 401
+          ? "Your admin session has expired. Please sign in again."
+          : response.status === 403
+            ? "You are not authorized to access this resource."
+            : "Unable to load admin data.";
+
+    if (response.status === 401) {
+      await supabase.auth.signOut();
+    }
 
     throw new Error(message);
   }

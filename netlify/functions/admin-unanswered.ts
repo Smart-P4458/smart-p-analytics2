@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -17,7 +18,21 @@ const jsonResponse = (
   body: JSON.stringify(body),
 });
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
+  if (event.httpMethod !== "GET") {
+    return jsonResponse(405, {
+      message: "Method not allowed.",
+    });
+  }
+
   try {
     const {
       data,
@@ -26,12 +41,12 @@ export const handler: Handler = async () => {
       .from("unanswered_questions")
       .select(
         `
-        id,
-        conversation_id,
-        question,
-        status,
-        created_at,
-        message_id
+          id,
+          conversation_id,
+          question,
+          status,
+          created_at,
+          message_id
         `
       )
       .eq("status", "open")

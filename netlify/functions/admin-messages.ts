@@ -1,32 +1,45 @@
-import type { Handler } from "@netlify/functions";
+import type {
+  Handler,
+  HandlerResponse,
+} from "@netlify/functions";
+
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
+const jsonResponse = (
+  statusCode: number,
+  body: unknown
+): HandlerResponse => ({
+  statusCode,
+  headers: {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store",
+  },
+  body: JSON.stringify(body),
+});
+
 export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
   if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: "Method not allowed.",
-      }),
-    };
+    return jsonResponse(405, {
+      message: "Method not allowed.",
+    });
   }
 
   const conversationId =
     event.queryStringParameters?.conversationId;
 
   if (!conversationId) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: "conversationId is required.",
-      }),
-    };
+    return jsonResponse(400, {
+      message: "conversationId is required.",
+    });
   }
 
   try {
@@ -34,13 +47,13 @@ export const handler: Handler = async (event) => {
       .from("messages")
       .select(
         `
-        id,
-        conversation_id,
-        sender,
-        message_type,
-        content,
-        is_answered,
-        created_at
+          id,
+          conversation_id,
+          sender,
+          message_type,
+          content,
+          is_answered,
+          created_at
         `
       )
       .eq("conversation_id", conversationId)
@@ -49,39 +62,28 @@ export const handler: Handler = async (event) => {
       });
 
     if (error) {
-      console.error("Admin messages query error:", error);
+      console.error(
+        "Admin messages query error:",
+        error
+      );
 
-      return {
-        statusCode: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "Unable to load conversation messages.",
-          details: error.message,
-        }),
-      };
+      return jsonResponse(500, {
+        message:
+          "Unable to load conversation messages.",
+        details: error.message,
+      });
     }
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-      body: JSON.stringify(data ?? []),
-    };
+    return jsonResponse(200, data ?? []);
   } catch (error) {
-    console.error("Admin messages function error:", error);
+    console.error(
+      "Admin messages function error:",
+      error
+    );
 
-    return {
-      statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: "Unexpected error loading conversation messages.",
-      }),
-    };
+    return jsonResponse(500, {
+      message:
+        "Unexpected error loading conversation messages.",
+    });
   }
 };

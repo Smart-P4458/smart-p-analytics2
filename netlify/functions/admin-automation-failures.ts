@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -37,6 +38,14 @@ type AutomationFailureRecord = {
 };
 
 export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
   if (event.httpMethod !== "GET") {
     return jsonResponse(405, {
       message: "Method not allowed.",
@@ -49,14 +58,16 @@ export const handler: Handler = async (event) => {
       error: failedContactsError,
     } = await supabase
       .from("contact_submissions")
-      .select(`
-        id,
-        name,
-        email,
-        subject,
-        automation_status,
-        created_at
-      `)
+      .select(
+        `
+          id,
+          name,
+          email,
+          subject,
+          automation_status,
+          created_at
+        `
+      )
       .eq("automation_status", "failed");
 
     if (failedContactsError) {
@@ -124,15 +135,17 @@ export const handler: Handler = async (event) => {
       error: failuresError,
     } = await supabase
       .from("automation_failures")
-      .select(`
-        id,
-        type,
-        reference_id,
-        error_message,
-        status,
-        created_at,
-        resolved_at
-      `)
+      .select(
+        `
+          id,
+          type,
+          reference_id,
+          error_message,
+          status,
+          created_at,
+          resolved_at
+        `
+      )
       .order("created_at", {
         ascending: false,
       });
@@ -154,9 +167,13 @@ export const handler: Handler = async (event) => {
         []) as AutomationFailureRecord[];
 
     const referenceIds = failureRecords
-      .map((failure) => failure.reference_id)
+      .map(
+        (failure) =>
+          failure.reference_id
+      )
       .filter(
-        (id): id is string => Boolean(id)
+        (id): id is string =>
+          Boolean(id)
       );
 
     let contacts: ContactRecord[] = [];
@@ -167,14 +184,16 @@ export const handler: Handler = async (event) => {
         error: contactsError,
       } = await supabase
         .from("contact_submissions")
-        .select(`
-          id,
-          name,
-          email,
-          subject,
-          automation_status,
-          created_at
-        `)
+        .select(
+          `
+            id,
+            name,
+            email,
+            subject,
+            automation_status,
+            created_at
+          `
+        )
         .in("id", referenceIds);
 
       if (contactsError) {
@@ -231,7 +250,10 @@ export const handler: Handler = async (event) => {
         } => item !== null
       );
 
-    return jsonResponse(200, response);
+    return jsonResponse(
+      200,
+      response
+    );
   } catch (error) {
     console.error(
       "Admin automation failures function error:",

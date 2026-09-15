@@ -25,7 +25,7 @@
         "npm:framer-motion@^12.42.2",
         "npm:globals@^17.7.0",
         "npm:lucide-react@^1.25.0",
-        "npm:netlify-cli@^27.3.0",
+        "npm:netlify-cli@^27.6.0",
         "npm:react-dom@^19.2.7",
         "npm:react-markdown@^10.1.0",
         "npm:react-router-dom@^7.18.1",

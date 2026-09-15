@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -17,7 +18,15 @@ const jsonResponse = (
   body: JSON.stringify(body),
 });
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
   try {
     const [
       conversationsResult,

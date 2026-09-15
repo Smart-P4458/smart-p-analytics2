@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -26,6 +27,14 @@ type ConversationStatus =
   (typeof allowedStatuses)[number];
 
 export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
   if (
     event.httpMethod !== "GET" &&
     event.httpMethod !== "PATCH"
@@ -36,10 +45,9 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    /* ---------------------------------------------
-       GET conversations
-       --------------------------------------------- */
-
+    /*
+     * GET conversations
+     */
     if (event.httpMethod === "GET") {
       const conversationId =
         event.queryStringParameters?.conversationId;
@@ -111,10 +119,9 @@ export const handler: Handler = async (event) => {
       return jsonResponse(200, data ?? []);
     }
 
-    /* ---------------------------------------------
-       PATCH conversation status
-       --------------------------------------------- */
-
+    /*
+     * PATCH conversation status
+     */
     const conversationId =
       event.queryStringParameters?.conversationId;
 

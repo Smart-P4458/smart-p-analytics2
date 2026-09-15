@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -21,12 +22,15 @@ async function createAutomationFailure(
   contactId: string,
   errorMessage: string
 ) {
-  const { data: existingFailure, error: lookupError } =
-    await supabase
-      .from("automation_failures")
-      .select("id, status")
-      .eq("reference_id", contactId)
-      .maybeSingle();
+  const {
+    data: existingFailure,
+    error: lookupError,
+  } = await supabase
+    .from("automation_failures")
+    .select("id, status")
+    .eq("reference_id", contactId)
+    .eq("type", "contact_form")
+    .maybeSingle();
 
   if (lookupError) {
     throw lookupError;
@@ -39,7 +43,7 @@ async function createAutomationFailure(
   const { data, error } = await supabase
     .from("automation_failures")
     .insert({
-      type: "contact_automation",
+      type: "contact_form",
       reference_id: contactId,
       error_message: errorMessage,
       status: "open",
@@ -79,6 +83,14 @@ async function resolveAutomationFailure(
 }
 
 export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
   if (
     event.httpMethod !== "GET" &&
     event.httpMethod !== "PATCH"
@@ -241,6 +253,10 @@ export const handler: Handler = async (event) => {
 
     return jsonResponse(500, {
       message: "Internal server error.",
+      details:
+        error instanceof Error
+          ? error.message
+          : "Unknown error.",
     });
   }
 };

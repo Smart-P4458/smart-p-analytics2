@@ -12,7 +12,6 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Skills from "./pages/Skills";
 
-/* Admin */
 import AdminLayout from "./components/admin/AdminLayout";
 import DashboardOverview from "./components/admin/DashboardOverview";
 import ConversationTable from "./components/admin/ConversationTable";
@@ -20,6 +19,8 @@ import ContactInbox from "./components/admin/ContactInbox";
 import UnansweredQuestions from "./components/admin/UnansweredQuestions";
 import AutomationFailures from "./components/admin/AutomationFailures";
 import ConversationDetails from "./components/admin/ConversationDetails";
+
+import AdminLogin from "./pages/AdminLogin";
 
 export default function App() {
   return (
@@ -101,55 +102,57 @@ export default function App() {
       />
 
       {/* ========================================
-          ADMIN DASHBOARD
+          ADMIN LOGIN
+      ======================================== */}
+
+      <Route
+        path="/admin/login"
+        element={<AdminLogin />}
+      />
+
+      {/* ========================================
+          PROTECTED ADMIN DASHBOARD
       ======================================== */}
 
       <Route
         path="/admin"
         element={<AdminLayout />}
       >
-        {/* /admin */}
         <Route
           index
           element={<DashboardOverview />}
         />
 
-        {/* /admin/dashboard */}
         <Route
           path="dashboard"
           element={<DashboardOverview />}
         />
 
-        {/* /admin/conversations */}
         <Route
           path="conversations"
           element={<ConversationTable />}
         />
 
-        {/* /admin/contacts */}
+        <Route
+          path="conversations/:conversationId"
+          element={<ConversationDetails />}
+        />
+
         <Route
           path="contacts"
           element={<ContactInbox />}
         />
 
-        {/* /admin/unanswered */}
         <Route
           path="unanswered"
           element={<UnansweredQuestions />}
         />
 
-        {/* /admin/automation-failures */}
         <Route
           path="automation-failures"
           element={<AutomationFailures />}
         />
       </Route>
-
-        {/* /admin/conversations/:conversationId */}
-      <Route
-          path="/admin/conversations/:conversationId"
-          element={<ConversationDetails />}
-        />
 
       {/* ========================================
           404
