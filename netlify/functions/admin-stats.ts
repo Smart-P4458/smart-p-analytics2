@@ -60,7 +60,7 @@ export const handler: Handler = async () => {
           count: "exact",
           head: true,
         })
-        .eq("status", "failed"),
+        .eq("status", "open"),
     ]);
 
     const results = [

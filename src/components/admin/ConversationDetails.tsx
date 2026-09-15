@@ -7,15 +7,24 @@ import {
   MessageSquare,
   RefreshCw,
   User,
+  XCircle,
 } from "lucide-react";
 import {
   useNavigate,
   useParams,
 } from "react-router-dom";
 
-import { getConversationMessages } from "../../services/admin/adminApi";
+import {
+  getConversation,
+  getConversationMessages,
+  updateConversationStatus,
+} from "../../services/admin/adminApi";
 
-import type { Message } from "../../services/admin/adminTypes";
+import type {
+  Conversation,
+  ConversationStatus,
+  Message,
+} from "../../services/admin/adminTypes";
 
 export default function ConversationDetails() {
   const { conversationId } =
@@ -25,16 +34,22 @@ export default function ConversationDetails() {
 
   const navigate = useNavigate();
 
+  const [conversation, setConversation] =
+    useState<Conversation | null>(null);
+
   const [messages, setMessages] =
     useState<Message[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
+  const [updatingStatus, setUpdatingStatus] =
+    useState(false);
+
   const [error, setError] =
     useState<string | null>(null);
 
-  async function loadMessages() {
+  async function loadConversation() {
     if (!conversationId) {
       setError("Conversation ID is missing.");
       setLoading(false);
@@ -45,22 +60,28 @@ export default function ConversationDetails() {
       setLoading(true);
       setError(null);
 
-      const data =
-        await getConversationMessages(
+      const [
+        conversationData,
+        messagesData,
+      ] = await Promise.all([
+        getConversation(conversationId),
+        getConversationMessages(
           conversationId
-        );
+        ),
+      ]);
 
-      setMessages(data);
+      setConversation(conversationData);
+      setMessages(messagesData);
     } catch (err) {
       console.error(
-        "Conversation messages error:",
+        "Conversation loading error:",
         err
       );
 
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to load conversation messages."
+          : "Unable to load conversation."
       );
     } finally {
       setLoading(false);
@@ -68,21 +89,74 @@ export default function ConversationDetails() {
   }
 
   useEffect(() => {
-    void loadMessages();
+    void loadConversation();
   }, [conversationId]);
 
-  const answeredMessages = messages.filter(
-    (message) => message.is_answered
-  ).length;
+  async function handleStatusChange(
+    nextStatus: ConversationStatus
+  ) {
+    if (!conversationId || updatingStatus) {
+      return;
+    }
+
+    const action =
+      nextStatus === "closed"
+        ? "close this conversation"
+        : "reopen this conversation";
+
+    const confirmed = window.confirm(
+      `Are you sure you want to ${action}?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      setError(null);
+
+      const updatedConversation =
+        await updateConversationStatus(
+          conversationId,
+          nextStatus
+        );
+
+      setConversation(
+        updatedConversation
+      );
+    } catch (err) {
+      console.error(
+        "Conversation status update error:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to update conversation status."
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
+  const answeredMessages =
+    messages.filter(
+      (message) => message.is_answered
+    ).length;
 
   const lastMessage =
     messages[messages.length - 1];
 
+  const isClosed =
+    conversation?.status === "closed";
+
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-6">
-      {/* Conversation header */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70">
-        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-6">
+    <div className="mx-auto w-full max-w-[1320px] space-y-6">
+      {/* Header */}
+      <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-7">
           <div className="flex min-w-0 items-start gap-3">
             <button
               type="button"
@@ -103,8 +177,16 @@ export default function ConversationDetails() {
                   Conversation
                 </p>
 
-                <span className="rounded-full bg-green-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-green-400">
-                  Live record
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                    isClosed
+                      ? "bg-slate-800 text-slate-400"
+                      : "bg-green-500/10 text-green-400"
+                  }`}
+                >
+                  {isClosed
+                    ? "Closed"
+                    : "Active"}
                 </span>
               </div>
 
@@ -112,80 +194,230 @@ export default function ConversationDetails() {
                 Conversation Details
               </h2>
 
-              <p className="mt-2 max-w-[700px] truncate font-mono text-xs text-slate-500">
+              <p className="mt-2 max-w-[760px] truncate font-mono text-xs text-slate-500">
                 {conversationId}
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void loadMessages()}
-            disabled={loading}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RefreshCw
-              size={16}
-              className={
-                loading
-                  ? "animate-spin"
-                  : ""
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() =>
+                void loadConversation()
               }
-            />
+              disabled={
+                loading || updatingStatus
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                size={16}
+                className={
+                  loading
+                    ? "animate-spin"
+                    : ""
+                }
+              />
 
-            Refresh
-          </button>
+              Refresh
+            </button>
+
+            {conversation && (
+              <button
+                type="button"
+                onClick={() =>
+                  void handleStatusChange(
+                    isClosed
+                      ? "active"
+                      : "closed"
+                  )
+                }
+                disabled={
+                  updatingStatus
+                }
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isClosed
+                    ? "bg-blue-600 text-white hover:bg-blue-500"
+                    : "border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                }`}
+              >
+                {updatingStatus ? (
+                  <RefreshCw
+                    size={16}
+                    className="animate-spin"
+                  />
+                ) : isClosed ? (
+                  <CheckCircle2
+                    size={16}
+                  />
+                ) : (
+                  <XCircle size={16} />
+                )}
+
+                {updatingStatus
+                  ? "Updating..."
+                  : isClosed
+                    ? "Reopen Conversation"
+                    : "Close Conversation"}
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Conversation summary */}
-        <div className="grid border-t border-slate-800 sm:grid-cols-3">
-          <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-4 sm:border-b-0 sm:border-r">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <MessageSquare size={17} />
+        {/* Conversation metadata */}
+        {conversation && (
+          <div className="grid border-t border-slate-800 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="border-b border-slate-800 px-5 py-4 xl:border-b-0 xl:border-r">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+                  <User size={17} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Visitor ID
+                  </p>
+
+                  <p className="mt-1 truncate font-mono text-xs text-slate-300">
+                    {conversation.visitor_id}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-b border-slate-800 px-5 py-4 sm:border-l xl:border-b-0 xl:border-r">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+                  <MessageSquare
+                    size={17}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Session ID
+                  </p>
+
+                  <p className="mt-1 truncate font-mono text-xs text-slate-300">
+                    {conversation.session_id}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-b border-slate-800 px-5 py-4 xl:border-b-0 xl:border-r">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
+                  <Clock3 size={17} />
+                </div>
+
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Created
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-300">
+                    {new Date(
+                      conversation.created_at
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+                  <Clock3 size={17} />
+                </div>
+
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Updated
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-300">
+                    {new Date(
+                      conversation.updated_at
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-sm font-medium text-red-400">
+            Conversation action failed.
+          </p>
+
+          <p className="mt-1 text-xs text-red-400/80">
+            {error}
+          </p>
+        </div>
+      )}
+
+      {/* Conversation statistics */}
+      <section className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+              <MessageSquare size={19} />
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-600">
-                Messages
+              <p className="text-xs text-slate-500">
+                Total Messages
               </p>
 
-              <p className="text-sm font-semibold text-white">
+              <p className="mt-1 text-2xl font-bold text-white">
                 {loading
                   ? "..."
                   : messages.length}
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-4 sm:border-b-0 sm:border-r">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
-              <CheckCircle2 size={17} />
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
+              <CheckCircle2
+                size={19}
+              />
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-600">
-                Answered
+              <p className="text-xs text-slate-500">
+                Answered Messages
               </p>
 
-              <p className="text-sm font-semibold text-white">
+              <p className="mt-1 text-2xl font-bold text-white">
                 {loading
                   ? "..."
                   : answeredMessages}
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 px-5 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-400">
-              <Clock3 size={17} />
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-slate-400">
+              <Clock3 size={19} />
             </div>
 
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wide text-slate-600">
-                Last activity
+              <p className="text-xs text-slate-500">
+                Last Activity
               </p>
 
-              <p className="truncate text-sm font-semibold text-white">
+              <p className="mt-1 truncate text-sm font-semibold text-white">
                 {loading
                   ? "..."
                   : lastMessage
@@ -199,20 +431,7 @@ export default function ConversationDetails() {
         </div>
       </section>
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
-          <p className="text-sm font-medium text-red-400">
-            Unable to load this conversation.
-          </p>
-
-          <p className="mt-1 text-xs text-red-400/80">
-            {error}
-          </p>
-        </div>
-      )}
-
-      {/* Conversation workspace */}
+      {/* Messages */}
       <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
         <div className="border-b border-slate-800 px-5 py-5 lg:px-8">
           <div className="flex items-center gap-3">
@@ -292,7 +511,6 @@ export default function ConversationDetails() {
                             : "border-blue-500/20 bg-blue-500/5"
                       }`}
                     >
-                      {/* Message header */}
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-4 py-3 sm:px-5">
                         <div className="flex items-center gap-2.5">
                           <div
@@ -348,7 +566,6 @@ export default function ConversationDetails() {
                         </div>
                       </div>
 
-                      {/* Message body */}
                       <div className="px-4 py-5 sm:px-5 sm:py-6">
                         <p className="whitespace-pre-wrap text-sm leading-7 text-slate-200">
                           {message.content}

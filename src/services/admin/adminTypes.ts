@@ -1,3 +1,7 @@
+export type ConversationStatus =
+  | "active"
+  | "closed";
+
 export type AdminStats = {
   totalConversations: number;
   totalMessages: number;
@@ -10,7 +14,7 @@ export type Conversation = {
   id: string;
   visitor_id: string;
   session_id: string;
-  status: string;
+  status: ConversationStatus;
   created_at: string;
   updated_at: string;
 };
