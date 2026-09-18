@@ -7,7 +7,7 @@ import {
 
 import { saveChatMessage } from "./chatApi";
 import { getSessionId } from "./session";
-import { generateResponse } from "./responseGenerator";
+import { generateResponseWithStatus } from "./responseGenerator";
 
 import type {
   AIContextType,
@@ -52,48 +52,18 @@ export function AIProvider({
     const sessionId = getSessionId();
 
     /* ---------------------------------------- */
-    /* Save User Message */
-    /* ---------------------------------------- */
-
-    void saveChatMessage({
-      sessionId,
-      message: cleanMessage,
-      sender: "user",
-      messageType: "text",
-    }).catch((error) => {
-      console.error(
-        "Failed to save user chat message:",
-        error
-      );
-    });
-
-    /* ---------------------------------------- */
-    /* Add User Message to UI */
-    /* ---------------------------------------- */
-
-    const userMessage: Message = {
-      id: Date.now(),
-      sender: "user",
-      text: cleanMessage,
-      timestamp: "Now",
-      type: "text",
-    };
-
-    setState((prev) => ({
-      ...prev,
-      messages: [
-        ...prev.messages,
-        userMessage,
-      ],
-      isTyping: true,
-    }));
-
-    /* ---------------------------------------- */
     /* Generate AI Response */
     /* ---------------------------------------- */
 
-    const rawResponse =
-      generateResponse(cleanMessage);
+    const generated =
+      generateResponseWithStatus(
+        cleanMessage
+      );
+
+    const {
+      response: rawResponse,
+      isAnswered,
+    } = generated;
 
     let responseType: MessageType = "text";
 
@@ -125,6 +95,44 @@ export function AIProvider({
         ""
       )
       .trim();
+
+    /* ---------------------------------------- */
+    /* Save User Message */
+    /* ---------------------------------------- */
+
+    void saveChatMessage({
+      sessionId,
+      message: cleanMessage,
+      sender: "user",
+      messageType: "text",
+      isAnswered,
+    }).catch((error) => {
+      console.error(
+        "Failed to save user chat message:",
+        error
+      );
+    });
+
+    /* ---------------------------------------- */
+    /* Add User Message to UI */
+    /* ---------------------------------------- */
+
+    const userMessage: Message = {
+      id: Date.now(),
+      sender: "user",
+      text: cleanMessage,
+      timestamp: "Now",
+      type: "text",
+    };
+
+    setState((prev) => ({
+      ...prev,
+      messages: [
+        ...prev.messages,
+        userMessage,
+      ],
+      isTyping: true,
+    }));
 
     /* ---------------------------------------- */
     /* Create Assistant Message ID */
@@ -193,6 +201,7 @@ export function AIProvider({
             message: fullResponse,
             sender: "assistant",
             messageType: responseType,
+            isAnswered: true,
           }).catch((error) => {
             console.error(
               "Failed to save assistant response:",

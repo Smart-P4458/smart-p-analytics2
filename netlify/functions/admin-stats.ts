@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -17,7 +18,21 @@ const jsonResponse = (
   body: JSON.stringify(body),
 });
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
+  if (event.httpMethod !== "GET") {
+    return jsonResponse(405, {
+      message: "Method not allowed.",
+    });
+  }
+
   try {
     const [
       conversationsResult,
@@ -60,7 +75,7 @@ export const handler: Handler = async () => {
           count: "exact",
           head: true,
         })
-        .eq("status", "failed"),
+        .eq("status", "open"),
     ]);
 
     const results = [
@@ -98,24 +113,18 @@ export const handler: Handler = async () => {
 
       return jsonResponse(500, {
         message: "Unable to load admin statistics.",
-        query: failedQuery.name,
-        details: failedQuery.result.error.message,
       });
     }
 
     return jsonResponse(200, {
       totalConversations:
         conversationsResult.count ?? 0,
-
       totalMessages:
         messagesResult.count ?? 0,
-
       unansweredQuestions:
         unansweredResult.count ?? 0,
-
       totalContacts:
         contactsResult.count ?? 0,
-
       automationFailures:
         failuresResult.count ?? 0,
     });
@@ -127,10 +136,6 @@ export const handler: Handler = async () => {
 
     return jsonResponse(500, {
       message: "Internal server error.",
-      details:
-        error instanceof Error
-          ? error.message
-          : "Unknown error.",
     });
   }
 };

@@ -3,6 +3,7 @@ import type {
   HandlerResponse,
 } from "@netlify/functions";
 
+import { requireAdmin } from "./_adminAuth";
 import { supabase } from "./_supabase";
 
 const jsonResponse = (
@@ -17,19 +18,38 @@ const jsonResponse = (
   body: JSON.stringify(body),
 });
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  const auth = await requireAdmin(event);
+
+  if (!auth.authorized) {
+    return jsonResponse(auth.statusCode, {
+      message: auth.message,
+    });
+  }
+
+  if (event.httpMethod !== "GET") {
+    return jsonResponse(405, {
+      message: "Method not allowed.",
+    });
+  }
+
   try {
-    const { data, error } =
-      await supabase
-        .from("messages")
-        .select(
-          "id, conversation_id, content, created_at"
-        )
-        .eq("sender", "user")
-        .eq("is_answered", false)
-        .order("created_at", {
-          ascending: false,
-        });
+    const { data, error } = await supabase
+      .from("unanswered_questions")
+      .select(
+        `
+          id,
+          conversation_id,
+          question,
+          status,
+          created_at,
+          message_id
+        `
+      )
+      .eq("status", "open")
+      .order("created_at", {
+        ascending: false,
+      });
 
     if (error) {
       console.error(
@@ -43,7 +63,16 @@ export const handler: Handler = async () => {
       });
     }
 
-    return jsonResponse(200, data ?? []);
+    const questions =
+      (data ?? []).map((item) => ({
+        id: item.id,
+        conversation_id:
+          item.conversation_id,
+        content: item.question,
+        created_at: item.created_at,
+      }));
+
+    return jsonResponse(200, questions);
   } catch (error) {
     console.error(
       "Admin unanswered function error:",
@@ -51,7 +80,8 @@ export const handler: Handler = async () => {
     );
 
     return jsonResponse(500, {
-      message: "Internal server error.",
+      message:
+        "Internal server error.",
     });
   }
 };
