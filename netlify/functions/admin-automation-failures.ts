@@ -163,8 +163,7 @@ export const handler: Handler = async (event) => {
     }
 
     const failureRecords =
-      (failures ??
-        []) as AutomationFailureRecord[];
+      (failures ?? []) as AutomationFailureRecord[];
 
     const referenceIds = failureRecords
       .map(
@@ -250,10 +249,7 @@ export const handler: Handler = async (event) => {
         } => item !== null
       );
 
-    return jsonResponse(
-      200,
-      response
-    );
+    return jsonResponse(200, response);
   } catch (error) {
     console.error(
       "Admin automation failures function error:",

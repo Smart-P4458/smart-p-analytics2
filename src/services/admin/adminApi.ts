@@ -17,6 +17,10 @@ type RequestOptions = {
   body?: unknown;
 };
 
+type ApiErrorBody = {
+  message?: unknown;
+};
+
 async function request<T>(
   functionName: string,
   options: RequestOptions = {}
@@ -51,27 +55,40 @@ async function request<T>(
     response.headers.get("content-type");
 
   if (!response.ok) {
-    const errorText =
-      contentType?.includes("application/json")
-        ? await response.json()
-        : await response.text();
+    let serverMessage = "";
 
-    const message =
-      typeof errorText === "object" &&
-      errorText !== null &&
-      "message" in errorText
-        ? String(errorText.message)
-        : response.status === 401
-          ? "Your admin session has expired. Please sign in again."
-          : response.status === 403
-            ? "You are not authorized to access this resource."
-            : "Unable to load admin data.";
+    if (contentType?.includes("application/json")) {
+      try {
+        const errorBody =
+          (await response.json()) as ApiErrorBody;
+
+        if (
+          typeof errorBody.message === "string"
+        ) {
+          serverMessage = errorBody.message;
+        }
+      } catch {
+        serverMessage = "";
+      }
+    }
 
     if (response.status === 401) {
       await supabase.auth.signOut();
+
+      throw new Error(
+        "Your admin session has expired. Please sign in again."
+      );
     }
 
-    throw new Error(message);
+    if (response.status === 403) {
+      throw new Error(
+        "You are not authorized to access this resource."
+      );
+    }
+
+    throw new Error(
+      serverMessage || "Unable to load admin data."
+    );
   }
 
   if (!contentType?.includes("application/json")) {

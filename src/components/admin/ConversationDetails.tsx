@@ -7,24 +7,112 @@ import {
   MessageSquare,
   RefreshCw,
   User,
-  XCircle,
 } from "lucide-react";
 import {
   useNavigate,
   useParams,
 } from "react-router-dom";
 
-import {
-  getConversation,
-  getConversationMessages,
-  updateConversationStatus,
-} from "../../services/admin/adminApi";
+import { getConversationMessages } from "../../services/admin/adminApi";
 
-import type {
-  Conversation,
-  ConversationStatus,
-  Message,
-} from "../../services/admin/adminTypes";
+import type { Message } from "../../services/admin/adminTypes";
+
+type ConversationExchange = {
+  id: string;
+  messages: Message[];
+  latestTime: number;
+};
+
+/**
+ * Groups messages into conversation exchanges.
+ *
+ * Example:
+ *
+ * User
+ * Assistant
+ *
+ * User
+ * Assistant
+ *
+ * becomes:
+ *
+ * Exchange 1:
+ *   User
+ *   Assistant
+ *
+ * Exchange 2:
+ *   User
+ *   Assistant
+ *
+ * The exchanges are then displayed newest first.
+ */
+function buildConversationExchanges(
+  messages: Message[]
+): ConversationExchange[] {
+  const chronologicalMessages = [...messages].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() -
+      new Date(b.created_at).getTime()
+  );
+
+  const exchanges: ConversationExchange[] = [];
+
+  let currentExchange: Message[] = [];
+
+  for (const message of chronologicalMessages) {
+    /*
+     * Every new user message starts a new exchange.
+     *
+     * This gives us:
+     *
+     * User
+     * Assistant
+     *
+     * User
+     * Assistant
+     */
+    if (
+      message.sender === "user" &&
+      currentExchange.length > 0
+    ) {
+      exchanges.push({
+        id: currentExchange[0].id,
+        messages: currentExchange,
+        latestTime: new Date(
+          currentExchange[
+            currentExchange.length - 1
+          ].created_at
+        ).getTime(),
+      });
+
+      currentExchange = [];
+    }
+
+    currentExchange.push(message);
+  }
+
+  /*
+   * Add the final exchange.
+   */
+  if (currentExchange.length > 0) {
+    exchanges.push({
+      id: currentExchange[0].id,
+      messages: currentExchange,
+      latestTime: new Date(
+        currentExchange[
+          currentExchange.length - 1
+        ].created_at
+      ).getTime(),
+    });
+  }
+
+  /*
+   * Newest exchange first.
+   */
+  return exchanges.sort(
+    (a, b) => b.latestTime - a.latestTime
+  );
+}
 
 export default function ConversationDetails() {
   const { conversationId } =
@@ -34,22 +122,16 @@ export default function ConversationDetails() {
 
   const navigate = useNavigate();
 
-  const [conversation, setConversation] =
-    useState<Conversation | null>(null);
-
   const [messages, setMessages] =
     useState<Message[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [updatingStatus, setUpdatingStatus] =
-    useState(false);
-
   const [error, setError] =
     useState<string | null>(null);
 
-  async function loadConversation() {
+  async function loadMessages() {
     if (!conversationId) {
       setError("Conversation ID is missing.");
       setLoading(false);
@@ -60,28 +142,22 @@ export default function ConversationDetails() {
       setLoading(true);
       setError(null);
 
-      const [
-        conversationData,
-        messagesData,
-      ] = await Promise.all([
-        getConversation(conversationId),
-        getConversationMessages(
+      const data =
+        await getConversationMessages(
           conversationId
-        ),
-      ]);
+        );
 
-      setConversation(conversationData);
-      setMessages(messagesData);
+      setMessages(data);
     } catch (err) {
       console.error(
-        "Conversation loading error:",
+        "Conversation messages error:",
         err
       );
 
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to load conversation."
+          : "Unable to load conversation messages."
       );
     } finally {
       setLoading(false);
@@ -89,75 +165,50 @@ export default function ConversationDetails() {
   }
 
   useEffect(() => {
-    void loadConversation();
+    void loadMessages();
   }, [conversationId]);
 
-  async function handleStatusChange(
-    nextStatus: ConversationStatus
-  ) {
-    if (!conversationId || updatingStatus) {
-      return;
-    }
+  /*
+   * Build exchanges:
+   *
+   * Exchange 1 = newest User + Assistant
+   * Exchange 2 = previous User + Assistant
+   * Exchange 3 = older User + Assistant
+   *
+   * Each exchange itself remains:
+   *
+   * User → Assistant
+   */
+  const conversationExchanges =
+    buildConversationExchanges(messages);
 
-    const action =
-      nextStatus === "closed"
-        ? "close this conversation"
-        : "reopen this conversation";
+  const answeredMessages = messages.filter(
+    (message) => message.is_answered
+  ).length;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to ${action}?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setUpdatingStatus(true);
-      setError(null);
-
-      const updatedConversation =
-        await updateConversationStatus(
-          conversationId,
-          nextStatus
-        );
-
-      setConversation(
-        updatedConversation
-      );
-    } catch (err) {
-      console.error(
-        "Conversation status update error:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to update conversation status."
-      );
-    } finally {
-      setUpdatingStatus(false);
-    }
-  }
-
-  const answeredMessages =
-    messages.filter(
-      (message) => message.is_answered
-    ).length;
-
-  const lastMessage =
-    messages[messages.length - 1];
-
-  const isClosed =
-    conversation?.status === "closed";
+  /*
+   * Find the actual newest message for the
+   * Last activity display.
+   */
+  const latestMessage =
+    [...messages].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    )[0];
 
   return (
-    <div className="mx-auto w-full max-w-[1320px] space-y-6">
-      {/* Header */}
-      <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
-        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-7">
+    <div className="mx-auto w-full max-w-[1280px] space-y-6">
+
+      {/* =====================================================
+          CONVERSATION HEADER
+      ====================================================== */}
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/70">
+
+        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-6">
+
           <div className="flex min-w-0 items-start gap-3">
+
             <button
               type="button"
               onClick={() =>
@@ -172,289 +223,184 @@ export default function ConversationDetails() {
             </button>
 
             <div className="min-w-0">
+
               <div className="flex flex-wrap items-center gap-2">
+
                 <p className="text-sm font-medium text-blue-400">
                   Conversation
                 </p>
 
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                    isClosed
-                      ? "bg-slate-800 text-slate-400"
-                      : "bg-green-500/10 text-green-400"
-                  }`}
-                >
-                  {isClosed
-                    ? "Closed"
-                    : "Active"}
+                <span className="rounded-full bg-green-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-green-400">
+                  Live record
                 </span>
+
               </div>
 
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">
                 Conversation Details
               </h2>
 
-              <p className="mt-2 max-w-[760px] truncate font-mono text-xs text-slate-500">
+              <p className="mt-2 max-w-[700px] truncate font-mono text-xs text-slate-500">
                 {conversationId}
               </p>
+
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() =>
-                void loadConversation()
+          <button
+            type="button"
+            onClick={() => void loadMessages()}
+            disabled={loading}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCw
+              size={16}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
               }
-              disabled={
-                loading || updatingStatus
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                size={16}
-                className={
-                  loading
-                    ? "animate-spin"
-                    : ""
-                }
-              />
+            />
 
-              Refresh
-            </button>
+            Refresh
+          </button>
 
-            {conversation && (
-              <button
-                type="button"
-                onClick={() =>
-                  void handleStatusChange(
-                    isClosed
-                      ? "active"
-                      : "closed"
-                  )
-                }
-                disabled={
-                  updatingStatus
-                }
-                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  isClosed
-                    ? "bg-blue-600 text-white hover:bg-blue-500"
-                    : "border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                }`}
-              >
-                {updatingStatus ? (
-                  <RefreshCw
-                    size={16}
-                    className="animate-spin"
-                  />
-                ) : isClosed ? (
-                  <CheckCircle2
-                    size={16}
-                  />
-                ) : (
-                  <XCircle size={16} />
-                )}
-
-                {updatingStatus
-                  ? "Updating..."
-                  : isClosed
-                    ? "Reopen Conversation"
-                    : "Close Conversation"}
-              </button>
-            )}
-          </div>
         </div>
 
-        {/* Conversation metadata */}
-        {conversation && (
-          <div className="grid border-t border-slate-800 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="border-b border-slate-800 px-5 py-4 xl:border-b-0 xl:border-r">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-                  <User size={17} />
-                </div>
+        {/* =================================================
+            CONVERSATION SUMMARY
+        ================================================== */}
+        <div className="grid border-t border-slate-800 sm:grid-cols-3">
 
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
-                    Visitor ID
-                  </p>
+          {/* Messages */}
+          <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-4 sm:border-b-0 sm:border-r">
 
-                  <p className="mt-1 truncate font-mono text-xs text-slate-300">
-                    {conversation.visitor_id}
-                  </p>
-                </div>
-              </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+              <MessageSquare size={17} />
             </div>
 
-            <div className="border-b border-slate-800 px-5 py-4 sm:border-l xl:border-b-0 xl:border-r">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
-                  <MessageSquare
-                    size={17}
-                  />
-                </div>
+            <div>
 
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
-                    Session ID
-                  </p>
+              <p className="text-[11px] uppercase tracking-wide text-slate-600">
+                Messages
+              </p>
 
-                  <p className="mt-1 truncate font-mono text-xs text-slate-300">
-                    {conversation.session_id}
-                  </p>
-                </div>
-              </div>
+              <p className="text-sm font-semibold text-white">
+                {loading
+                  ? "..."
+                  : messages.length}
+              </p>
+
             </div>
 
-            <div className="border-b border-slate-800 px-5 py-4 xl:border-b-0 xl:border-r">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
-                  <Clock3 size={17} />
-                </div>
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
-                    Created
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-300">
-                    {new Date(
-                      conversation.created_at
-                    ).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
-                  <Clock3 size={17} />
-                </div>
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-slate-600">
-                    Updated
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-300">
-                    {new Date(
-                      conversation.updated_at
-                    ).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
-        )}
+
+          {/* Answered */}
+          <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-4 sm:border-b-0 sm:border-r">
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
+              <CheckCircle2 size={17} />
+            </div>
+
+            <div>
+
+              <p className="text-[11px] uppercase tracking-wide text-slate-600">
+                Answered
+              </p>
+
+              <p className="text-sm font-semibold text-white">
+                {loading
+                  ? "..."
+                  : answeredMessages}
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* Latest activity */}
+          <div className="flex items-center gap-3 px-5 py-4">
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-400">
+              <Clock3 size={17} />
+            </div>
+
+            <div className="min-w-0">
+
+              <p className="text-[11px] uppercase tracking-wide text-slate-600">
+                Last activity
+              </p>
+
+              <p className="truncate text-sm font-semibold text-white">
+                {loading
+                  ? "..."
+                  : latestMessage
+                    ? new Date(
+                        latestMessage.created_at
+                      ).toLocaleString()
+                    : "No activity"}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
       </section>
 
-      {/* Error */}
+      {/* =====================================================
+          ERROR
+      ====================================================== */}
       {error && (
         <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+
           <p className="text-sm font-medium text-red-400">
-            Conversation action failed.
+            Unable to load this conversation.
           </p>
 
           <p className="mt-1 text-xs text-red-400/80">
             {error}
           </p>
+
         </div>
       )}
 
-      {/* Conversation statistics */}
-      <section className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
-              <MessageSquare size={19} />
-            </div>
-
-            <div>
-              <p className="text-xs text-slate-500">
-                Total Messages
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-white">
-                {loading
-                  ? "..."
-                  : messages.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
-              <CheckCircle2
-                size={19}
-              />
-            </div>
-
-            <div>
-              <p className="text-xs text-slate-500">
-                Answered Messages
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-white">
-                {loading
-                  ? "..."
-                  : answeredMessages}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-slate-400">
-              <Clock3 size={19} />
-            </div>
-
-            <div className="min-w-0">
-              <p className="text-xs text-slate-500">
-                Last Activity
-              </p>
-
-              <p className="mt-1 truncate text-sm font-semibold text-white">
-                {loading
-                  ? "..."
-                  : lastMessage
-                    ? new Date(
-                        lastMessage.created_at
-                      ).toLocaleString()
-                    : "No activity"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Messages */}
+      {/* =====================================================
+          CONVERSATION WORKSPACE
+      ====================================================== */}
       <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+
+        {/* Workspace Header */}
         <div className="border-b border-slate-800 px-5 py-5 lg:px-8">
+
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
               <MessageSquare size={19} />
             </div>
 
             <div>
+
               <h3 className="text-base font-semibold text-white">
                 Conversation Messages
               </h3>
 
               <p className="mt-1 text-xs text-slate-500">
-                Complete message history between
-                the visitor and Smart-P AI.
+                Latest conversation first · User prompt followed by Smart-P AI response.
               </p>
+
             </div>
+
           </div>
+
         </div>
 
+        {/* Loading */}
         {loading ? (
           <div className="flex min-h-[420px] items-center justify-center p-10">
+
             <div className="text-center">
+
               <RefreshCw
                 size={30}
                 className="mx-auto animate-spin text-slate-600"
@@ -463,11 +409,18 @@ export default function ConversationDetails() {
               <p className="mt-4 text-sm text-slate-500">
                 Loading conversation messages...
               </p>
+
             </div>
+
           </div>
+
         ) : messages.length === 0 ? (
+
+          /* Empty */
           <div className="flex min-h-[420px] items-center justify-center p-10">
+
             <div className="text-center">
+
               <MessageSquare
                 size={36}
                 className="mx-auto text-slate-700"
@@ -481,103 +434,216 @@ export default function ConversationDetails() {
                 This conversation does not contain
                 any message records.
               </p>
+
             </div>
+
           </div>
+
         ) : (
+
+          /* =================================================
+             CONVERSATION EXCHANGES
+          ================================================== */
           <div className="bg-slate-950/30 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-            <div className="mx-auto max-w-[1050px] space-y-7">
-              {messages.map((message) => {
-                const isUser =
-                  message.sender === "user";
 
-                const isAdmin =
-                  message.sender === "admin";
+            <div className="mx-auto max-w-[1050px] space-y-10">
 
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      isUser
-                        ? "justify-start"
-                        : "justify-end"
-                    }`}
-                  >
-                    <article
-                      className={`w-full max-w-[760px] overflow-hidden rounded-2xl border ${
-                        isUser
-                          ? "border-slate-800 bg-slate-900"
-                          : isAdmin
-                            ? "border-amber-500/20 bg-amber-500/5"
-                            : "border-blue-500/20 bg-blue-500/5"
-                      }`}
+              {conversationExchanges.map(
+                (exchange, exchangeIndex) => {
+
+                  const isLatestExchange =
+                    exchangeIndex === 0;
+
+                  return (
+                    <div
+                      key={exchange.id}
+                      className="relative"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-4 py-3 sm:px-5">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                              isUser
-                                ? "bg-slate-800 text-slate-400"
-                                : isAdmin
-                                  ? "bg-amber-500/10 text-amber-400"
-                                  : "bg-blue-500/10 text-blue-400"
-                            }`}
-                          >
-                            {isUser ? (
-                              <User size={15} />
-                            ) : (
-                              <Bot size={15} />
-                            )}
-                          </div>
 
-                          <div>
-                            <p
-                              className={`text-xs font-semibold uppercase tracking-wide ${
-                                isUser
-                                  ? "text-slate-300"
-                                  : isAdmin
-                                    ? "text-amber-400"
-                                    : "text-blue-400"
-                              }`}
-                            >
-                              {message.sender}
-                            </p>
+                      {/* =====================================
+                          EXCHANGE LABEL
+                      ====================================== */}
+                      <div className="mb-4 flex items-center gap-3">
 
-                            <p className="text-[10px] text-slate-600">
-                              {message.message_type}
-                            </p>
-                          </div>
-                        </div>
+                        <div className="h-px flex-1 bg-slate-800" />
 
-                        <div className="flex items-center gap-2">
-                          {message.is_answered && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-[10px] font-medium text-green-400">
-                              <CheckCircle2
-                                size={11}
-                              />
-                              Answered
-                            </span>
-                          )}
+                        <span
+                          className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                            isLatestExchange
+                              ? "border-blue-500/20 bg-blue-500/10 text-blue-400"
+                              : "border-slate-800 bg-slate-900 text-slate-600"
+                          }`}
+                        >
+                          {isLatestExchange
+                            ? "Latest exchange"
+                            : "Previous exchange"}
+                        </span>
 
-                          <span className="text-[10px] text-slate-600">
-                            {new Date(
-                              message.created_at
-                            ).toLocaleString()}
-                          </span>
-                        </div>
+                        <div className="h-px flex-1 bg-slate-800" />
+
                       </div>
 
-                      <div className="px-4 py-5 sm:px-5 sm:py-6">
-                        <p className="whitespace-pre-wrap text-sm leading-7 text-slate-200">
-                          {message.content}
-                        </p>
+                      {/* =====================================
+                          MESSAGES INSIDE EXCHANGE
+                      ====================================== */}
+                      <div className="space-y-4">
+
+                        {exchange.messages.map(
+                          (message) => {
+
+                            const isUser =
+                              message.sender ===
+                              "user";
+
+                            const isAdmin =
+                              message.sender ===
+                              "admin";
+
+                            return (
+                              <div
+                                key={message.id}
+                                className={`flex ${
+                                  isUser
+                                    ? "justify-start"
+                                    : "justify-end"
+                                }`}
+                              >
+
+                                <article
+                                  className={`w-full max-w-[760px] overflow-hidden rounded-2xl border ${
+                                    isUser
+                                      ? "border-slate-800 bg-slate-900"
+                                      : isAdmin
+                                        ? "border-amber-500/20 bg-amber-500/5"
+                                        : "border-blue-500/20 bg-blue-500/5"
+                                  } ${
+                                    isLatestExchange
+                                      ? "ring-1 ring-blue-500/10"
+                                      : ""
+                                  }`}
+                                >
+
+                                  {/* Message Header */}
+                                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-4 py-3 sm:px-5">
+
+                                    <div className="flex items-center gap-2.5">
+
+                                      <div
+                                        className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                                          isUser
+                                            ? "bg-slate-800 text-slate-400"
+                                            : isAdmin
+                                              ? "bg-amber-500/10 text-amber-400"
+                                              : "bg-blue-500/10 text-blue-400"
+                                        }`}
+                                      >
+                                        {isUser ? (
+                                          <User
+                                            size={15}
+                                          />
+                                        ) : (
+                                          <Bot
+                                            size={15}
+                                          />
+                                        )}
+                                      </div>
+
+                                      <div>
+
+                                        <p
+                                          className={`text-xs font-semibold uppercase tracking-wide ${
+                                            isUser
+                                              ? "text-slate-300"
+                                              : isAdmin
+                                                ? "text-amber-400"
+                                                : "text-blue-400"
+                                          }`}
+                                        >
+                                          {isUser
+                                            ? "User"
+                                            : isAdmin
+                                              ? "Admin"
+                                              : "Smart-P AI"}
+                                        </p>
+
+                                        <p className="text-[10px] text-slate-600">
+                                          {
+                                            message.message_type
+                                          }
+                                        </p>
+
+                                      </div>
+
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+
+                                      {isLatestExchange &&
+                                        isUser && (
+                                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-1 text-[10px] font-semibold text-blue-400">
+                                            Latest prompt
+                                          </span>
+                                        )}
+
+                                      {isLatestExchange &&
+                                        !isUser && (
+                                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-1 text-[10px] font-semibold text-blue-400">
+                                            Latest response
+                                          </span>
+                                        )}
+
+                                      {message.is_answered && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-[10px] font-medium text-green-400">
+
+                                          <CheckCircle2
+                                            size={11}
+                                          />
+
+                                          Answered
+
+                                        </span>
+                                      )}
+
+                                      <span className="text-[10px] text-slate-600">
+                                        {new Date(
+                                          message.created_at
+                                        ).toLocaleString()}
+                                      </span>
+
+                                    </div>
+
+                                  </div>
+
+                                  {/* Message Body */}
+                                  <div className="px-4 py-5 sm:px-5 sm:py-6">
+
+                                    <p className="whitespace-pre-wrap text-sm leading-7 text-slate-200">
+                                      {
+                                        message.content
+                                      }
+                                    </p>
+
+                                  </div>
+
+                                </article>
+
+                              </div>
+                            );
+                          }
+                        )}
+
                       </div>
-                    </article>
-                  </div>
-                );
-              })}
+
+                    </div>
+                  );
+                }
+              )}
+
             </div>
+
           </div>
         )}
+
       </section>
     </div>
   );

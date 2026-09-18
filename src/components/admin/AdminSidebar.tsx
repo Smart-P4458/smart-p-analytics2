@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   LayoutDashboard,
   X,
+  ChevronRight,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -53,9 +54,9 @@ export default function AdminSidebar({
       {isOpen && (
         <button
           type="button"
-          aria-label="Close admin menu"
+          aria-label="Close admin navigation"
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
         />
       )}
 
@@ -67,8 +68,10 @@ export default function AdminSidebar({
           z-50
           w-64
           border-r
-          border-slate-800
-          bg-slate-950
+          border-slate-800/90
+          bg-[#020617]
+          shadow-2xl
+          shadow-black/30
           transition-transform
           duration-300
           ease-in-out
@@ -81,104 +84,179 @@ export default function AdminSidebar({
         `}
       >
         <div className="flex h-full flex-col">
-          {/* Brand */}
-          <div className="flex h-[73px] shrink-0 items-center justify-between border-b border-slate-800 px-6">
-            <img
-            src="/branding/Smart-P-Logo.png"
-            alt="Smart-P Analytics Logo"
-            className="
-              h-14
-              w-14
-              object-contain
-              transition-all
-              duration-300
-              group-hover:scale-110
-              group-hover:rotate-3
-            "
-          />
-            <div className="min-w-0">
-              <p className="truncate text-base font-bold text-white">
-                Smart-P Analytics
-              </p>
+          {/* =====================================================
+              BRAND
+          ====================================================== */}
+          <div className="flex h-[73px] shrink-0 items-center border-b border-slate-800/90 px-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {/* Logo */}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+                <img
+                  src="/branding/Smart-P-Logo.png"
+                  alt="Smart-P Analytics"
+                  className="h-10 w-10 object-contain transition duration-300 hover:scale-105"
+                />
+              </div>
 
-              <p className="text-xs text-slate-500">
-                Admin Dashboard
-              </p>
+              {/* Brand text */}
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold tracking-tight text-white">
+                  Smart-P Analytics
+                </p>
+
+                <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">
+                  Admin Dashboard
+                </p>
+              </div>
             </div>
 
+            {/* Mobile close */}
             <button
               type="button"
               aria-label="Close admin menu"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:hidden"
+              className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-white lg:hidden"
             >
-              <X size={20} />
+              <X size={19} />
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1.5 overflow-y-auto p-3">
-            {navigation.map((item) => {
-              const Icon = item.icon;
+          {/* =====================================================
+              NAVIGATION
+          ====================================================== */}
+          <nav className="flex-1 overflow-y-auto px-3 py-5">
+            {/* Section label */}
+            <div className="mb-3 px-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
+                Management
+              </p>
+            </div>
 
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/admin"}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `
-                    flex
-                    min-h-11
-                    items-center
-                    gap-3
-                    rounded-xl
-                    px-3
-                    py-2.5
-                    text-sm
-                    font-medium
-                    transition
-                    ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                        : "text-slate-400 hover:bg-slate-900 hover:text-white"
+            <div className="space-y-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/admin"}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `
+                      group
+                      relative
+                      flex
+                      min-h-11
+                      items-center
+                      gap-3
+                      rounded-xl
+                      px-3
+                      py-2.5
+                      text-sm
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                          : "text-slate-400 hover:bg-slate-900/90 hover:text-slate-100"
+                      }
+                      `
                     }
-                    `
-                  }
-                >
-                  <Icon
-                    size={19}
-                    className="shrink-0"
-                  />
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {/* Active indicator */}
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full bg-white" />
+                        )}
 
-                  <span className="truncate">
-                    {item.name}
-                  </span>
-                </NavLink>
-              );
-            })}
+                        {/* Icon container */}
+                        <span
+                          className={`
+                            flex
+                            h-8
+                            w-8
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-lg
+                            transition
+                            ${
+                              isActive
+                                ? "bg-white/10"
+                                : "bg-slate-900/60 group-hover:bg-slate-800"
+                            }
+                          `}
+                        >
+                          <Icon
+                            size={18}
+                            strokeWidth={isActive ? 2.2 : 1.8}
+                          />
+                        </span>
+
+                        {/* Label */}
+                        <span className="min-w-0 flex-1 truncate">
+                          {item.name}
+                        </span>
+
+                        {/* Active arrow */}
+                        {isActive && (
+                          <ChevronRight
+                            size={15}
+                            className="shrink-0 text-blue-100"
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
           </nav>
 
-          {/* Footer */}
-          <div className="shrink-0 border-t border-slate-800 p-3">
-            <div className="rounded-xl bg-slate-900 p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600/20 text-blue-400">
-                  <BarChart3 size={18} />
+          {/* =====================================================
+              FOOTER / SMART-P AI
+          ====================================================== */}
+          <div className="shrink-0 border-t border-slate-800/90 p-3">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-3.5">
+              {/* Ambient glow */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-blue-600/10 blur-2xl"
+              />
+
+              <div className="relative flex items-center gap-3">
+                {/* AI icon */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
+                  <BarChart3
+                    size={19}
+                    strokeWidth={2}
+                  />
                 </div>
 
+                {/* AI information */}
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">
-                    Smart-P AI
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate text-sm font-semibold text-white">
+                      Smart-P AI
+                    </p>
 
-                  <p className="truncate text-xs text-slate-500">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                  </div>
+
+                  <p className="mt-0.5 truncate text-[11px] text-slate-500">
                     System monitoring
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Version */}
+            <p className="mt-3 text-center text-[10px] font-medium tracking-wide text-slate-700">
+              SMART-P ANALYTICS · ADMIN
+            </p>
           </div>
         </div>
       </aside>

@@ -44,36 +44,59 @@ export async function requireAdmin(
     };
   }
 
-  const accessToken = match[1];
+  const accessToken = match[1].trim();
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(accessToken);
-
-  if (error || !user) {
+  if (!accessToken) {
     return {
       authorized: false,
       statusCode: 401,
-      message: "Invalid or expired authentication token.",
+      message: "Authentication required.",
     };
   }
 
-  const email = user.email?.trim().toLowerCase();
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
 
-  if (email !== ADMIN_EMAIL) {
+    if (error || !user) {
+      return {
+        authorized: false,
+        statusCode: 401,
+        message: "Invalid or expired authentication token.",
+      };
+    }
+
+    const email =
+      user.email?.trim().toLowerCase();
+
+    if (email !== ADMIN_EMAIL) {
+      return {
+        authorized: false,
+        statusCode: 403,
+        message:
+          "You are not authorized to access the admin dashboard.",
+      };
+    }
+
+    return {
+      authorized: true,
+      user: {
+        id: user.id,
+        email,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "Admin authentication verification error:",
+      error
+    );
+
     return {
       authorized: false,
-      statusCode: 403,
-      message: "You are not authorized to access the admin dashboard.",
+      statusCode: 401,
+      message: "Unable to verify authentication.",
     };
   }
-
-  return {
-    authorized: true,
-    user: {
-      id: user.id,
-      email: email,
-    },
-  };
 }

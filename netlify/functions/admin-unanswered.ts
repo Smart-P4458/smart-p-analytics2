@@ -34,10 +34,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const {
-      data,
-      error,
-    } = await supabase
+    const { data, error } = await supabase
       .from("unanswered_questions")
       .select(
         `
@@ -67,22 +64,15 @@ export const handler: Handler = async (event) => {
     }
 
     const questions =
-      (data ?? []).map(
-        (item) => ({
-          id: item.id,
-          conversation_id:
-            item.conversation_id,
-          content:
-            item.question,
-          created_at:
-            item.created_at,
-        })
-      );
+      (data ?? []).map((item) => ({
+        id: item.id,
+        conversation_id:
+          item.conversation_id,
+        content: item.question,
+        created_at: item.created_at,
+      }));
 
-    return jsonResponse(
-      200,
-      questions
-    );
+    return jsonResponse(200, questions);
   } catch (error) {
     console.error(
       "Admin unanswered function error:",

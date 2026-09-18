@@ -45,9 +45,6 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    /*
-     * GET conversations
-     */
     if (event.httpMethod === "GET") {
       const conversationId =
         event.queryStringParameters?.conversationId;
@@ -119,9 +116,6 @@ export const handler: Handler = async (event) => {
       return jsonResponse(200, data ?? []);
     }
 
-    /*
-     * PATCH conversation status
-     */
     const conversationId =
       event.queryStringParameters?.conversationId;
 
@@ -191,7 +185,6 @@ export const handler: Handler = async (event) => {
       return jsonResponse(500, {
         message:
           "Unable to update conversation status.",
-        details: error.message,
       });
     }
 

@@ -70,7 +70,6 @@ export const handler: Handler = async (event) => {
       return jsonResponse(500, {
         message:
           "Unable to load conversation messages.",
-        details: error.message,
       });
     }
 

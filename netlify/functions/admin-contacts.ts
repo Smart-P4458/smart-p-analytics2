@@ -18,6 +18,16 @@ const jsonResponse = (
   body: JSON.stringify(body),
 });
 
+const allowedAutomationStatuses = [
+  "pending",
+  "sent",
+  "failed",
+  "resolved",
+] as const;
+
+type AutomationStatus =
+  (typeof allowedAutomationStatuses)[number];
+
 async function createAutomationFailure(
   contactId: string,
   errorMessage: string
@@ -101,10 +111,6 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    /*
-     * GET
-     * Load all contact submissions.
-     */
     if (event.httpMethod === "GET") {
       const { data, error } = await supabase
         .from("contact_submissions")
@@ -140,10 +146,6 @@ export const handler: Handler = async (event) => {
       return jsonResponse(200, data ?? []);
     }
 
-    /*
-     * PATCH
-     * Update contact automation status.
-     */
     const contactId =
       event.queryStringParameters?.contactId;
 
@@ -174,12 +176,19 @@ export const handler: Handler = async (event) => {
     }
 
     const automationStatus =
-      body.automation_status?.trim();
+      body.automation_status?.trim() as
+        | AutomationStatus
+        | undefined;
 
-    if (!automationStatus) {
+    if (
+      !automationStatus ||
+      !allowedAutomationStatuses.includes(
+        automationStatus
+      )
+    ) {
       return jsonResponse(400, {
         message:
-          "automation_status is required.",
+          "Invalid automation status.",
       });
     }
 
@@ -213,7 +222,6 @@ export const handler: Handler = async (event) => {
       return jsonResponse(500, {
         message:
           "Unable to update contact status.",
-        details: error.message,
       });
     }
 
@@ -223,10 +231,6 @@ export const handler: Handler = async (event) => {
       });
     }
 
-    /*
-     * Failed contact:
-     * Create an automation failure record.
-     */
     if (automationStatus === "failed") {
       await createAutomationFailure(
         contactId,
@@ -234,10 +238,6 @@ export const handler: Handler = async (event) => {
       );
     }
 
-    /*
-     * Non-failed contact:
-     * Resolve any previous automation failure.
-     */
     if (automationStatus !== "failed") {
       await resolveAutomationFailure(
         contactId
@@ -253,10 +253,6 @@ export const handler: Handler = async (event) => {
 
     return jsonResponse(500, {
       message: "Internal server error.",
-      details:
-        error instanceof Error
-          ? error.message
-          : "Unknown error.",
     });
   }
 };
