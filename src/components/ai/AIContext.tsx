@@ -1,13 +1,14 @@
 import {
   createContext,
   useContext,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
 import { saveChatMessage } from "./chatApi";
 import { getSessionId } from "./session";
-import { generateResponseWithStatus } from "./responseGenerator";
+import { generateResponse } from "./responseGenerator";
 
 import type {
   AIContextType,
@@ -16,9 +17,9 @@ import type {
   MessageType,
 } from "./Types";
 
-const AIContext = createContext<
-  AIContextType | undefined
->(undefined);
+const AIContext = createContext<AIContextType | undefined>(
+  undefined
+);
 
 type ProviderProps = {
   children: ReactNode;
@@ -32,9 +33,27 @@ const WELCOME_MESSAGE: Message = {
   type: "text",
 };
 
-const RESPONSE_START_DELAY = 300;
-const CHUNK_SIZE = 4;
-const CHUNK_DELAY = 15;
+/*
+ * Smart-P AI response animation settings
+ *
+ * RESPONSE_START_DELAY:
+ * Small pause before the assistant begins responding.
+ *
+ * TARGET_STREAM_DURATION:
+ * Approximate maximum time a normal response should spend
+ * visibly streaming.
+ *
+ * MIN_CHUNK_SIZE / MAX_CHUNK_SIZE:
+ * Control how many characters appear during each update.
+ *
+ * FRAME_DELAY:
+ * Controls how frequently the visible text is refreshed.
+ */
+const RESPONSE_START_DELAY = 180;
+const TARGET_STREAM_DURATION = 1100;
+const FRAME_DELAY = 16;
+const MIN_CHUNK_SIZE = 6;
+const MAX_CHUNK_SIZE = 24;
 
 export function AIProvider({
   children,
@@ -44,68 +63,48 @@ export function AIProvider({
     isTyping: false,
   });
 
+  /*
+   * Keeps track of the active response animation.
+   * This prevents old animations from continuing after
+   * the chat has been cleared.
+   */
+  const streamTimerRef = useRef<number | null>(null);
+  const responseDelayRef = useRef<number | null>(null);
+
+  const stopActiveStream = () => {
+    if (streamTimerRef.current !== null) {
+      window.clearInterval(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
+
+    if (responseDelayRef.current !== null) {
+      window.clearTimeout(responseDelayRef.current);
+      responseDelayRef.current = null;
+    }
+  };
+
   const sendMessage = (message: string) => {
     const cleanMessage = message.trim();
 
     if (!cleanMessage) return;
 
+    /*
+     * Prevent a previous unfinished animation from
+     * interfering with the next response.
+     */
+    stopActiveStream();
+
     const sessionId = getSessionId();
 
-    /* ---------------------------------------- */
-    /* Generate AI Response */
-    /* ---------------------------------------- */
-
-    const generated =
-      generateResponseWithStatus(
-        cleanMessage
-      );
-
-    const {
-      response: rawResponse,
-      isAnswered,
-    } = generated;
-
-    let responseType: MessageType = "text";
-
-    if (
-      rawResponse.includes(
-        "[CERTIFICATE_CARD]"
-      )
-    ) {
-      responseType = "certificate";
-    } else if (
-      rawResponse.includes(
-        "[RESUME_CARD]"
-      )
-    ) {
-      responseType = "resume";
-    }
-
-    /* ---------------------------------------- */
-    /* Remove Internal Card Commands */
-    /* ---------------------------------------- */
-
-    const fullResponse = rawResponse
-      .replace(
-        "[CERTIFICATE_CARD]",
-        ""
-      )
-      .replace(
-        "[RESUME_CARD]",
-        ""
-      )
-      .trim();
-
-    /* ---------------------------------------- */
-    /* Save User Message */
-    /* ---------------------------------------- */
+    /* ----------------------------------------
+       Save User Message
+    ---------------------------------------- */
 
     void saveChatMessage({
       sessionId,
       message: cleanMessage,
       sender: "user",
       messageType: "text",
-      isAnswered,
     }).catch((error) => {
       console.error(
         "Failed to save user chat message:",
@@ -113,9 +112,9 @@ export function AIProvider({
       );
     });
 
-    /* ---------------------------------------- */
-    /* Add User Message to UI */
-    /* ---------------------------------------- */
+    /* ----------------------------------------
+       Add User Message to UI
+    ---------------------------------------- */
 
     const userMessage: Message = {
       id: Date.now(),
@@ -134,95 +133,183 @@ export function AIProvider({
       isTyping: true,
     }));
 
-    /* ---------------------------------------- */
-    /* Create Assistant Message ID */
-    /* ---------------------------------------- */
+    /* ----------------------------------------
+       Generate Smart-P AI Response
+    ---------------------------------------- */
 
-    const assistantId = Date.now() + 1;
+    const rawResponse =
+      generateResponse(cleanMessage);
 
-    /* ---------------------------------------- */
-    /* Start AI Response */
-    /* ---------------------------------------- */
+    let responseType: MessageType = "text";
 
-    setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        messages: [
-          ...prev.messages,
-          {
-            id: assistantId,
-            sender: "assistant",
-            text: "",
-            timestamp: "Now",
-            type: responseType,
-          },
-        ],
-      }));
+    if (
+      rawResponse.includes(
+        "[CERTIFICATE_CARD]"
+      )
+    ) {
+      responseType = "certificate";
+    } else if (
+      rawResponse.includes(
+        "[RESUME_CARD]"
+      )
+    ) {
+      responseType = "resume";
+    }
 
-      let index = 0;
+    /* ----------------------------------------
+       Remove Internal Card Commands
+    ---------------------------------------- */
 
-      const interval = setInterval(() => {
-        index = Math.min(
-          index + CHUNK_SIZE,
-          fullResponse.length
-        );
+    const fullResponse = rawResponse
+      .replace(
+        "[CERTIFICATE_CARD]",
+        ""
+      )
+      .replace(
+        "[RESUME_CARD]",
+        ""
+      )
+      .trim();
+
+    /* ----------------------------------------
+       Create Assistant Message
+    ---------------------------------------- */
+
+    const assistantId =
+      Date.now() + 1;
+
+    /*
+     * Calculate the streaming chunk dynamically.
+     *
+     * Short answers still appear naturally.
+     * Long answers automatically receive larger chunks,
+     * preventing them from taking several seconds.
+     */
+    const estimatedFrames = Math.max(
+      1,
+      Math.floor(
+        TARGET_STREAM_DURATION /
+          FRAME_DELAY
+      )
+    );
+
+    const calculatedChunkSize =
+      Math.ceil(
+        fullResponse.length /
+          estimatedFrames
+      );
+
+    const chunkSize = Math.min(
+      MAX_CHUNK_SIZE,
+      Math.max(
+        MIN_CHUNK_SIZE,
+        calculatedChunkSize
+      )
+    );
+
+    /* ----------------------------------------
+       Start Smart-P AI Response
+    ---------------------------------------- */
+
+    responseDelayRef.current =
+      window.setTimeout(() => {
+        responseDelayRef.current = null;
 
         setState((prev) => ({
           ...prev,
-          messages: prev.messages.map(
-            (msg) =>
-              msg.id === assistantId
-                ? {
-                    ...msg,
-                    text: fullResponse.slice(
-                      0,
-                      index
-                    ),
-                  }
-                : msg
-          ),
+          messages: [
+            ...prev.messages,
+            {
+              id: assistantId,
+              sender: "assistant",
+              text: "",
+              timestamp: "Now",
+              type: responseType,
+            },
+          ],
         }));
 
-        /* ---------------------------------------- */
-        /* Response Completed */
-        /* ---------------------------------------- */
+        let index = 0;
 
-        if (
-          index >= fullResponse.length
-        ) {
-          clearInterval(interval);
-
-          /* ---------------------------------------- */
-          /* Save Assistant Message */
-          /* ---------------------------------------- */
-
-          void saveChatMessage({
-            sessionId,
-            message: fullResponse,
-            sender: "assistant",
-            messageType: responseType,
-            isAnswered: true,
-          }).catch((error) => {
-            console.error(
-              "Failed to save assistant response:",
-              error
+        streamTimerRef.current =
+          window.setInterval(() => {
+            index = Math.min(
+              index + chunkSize,
+              fullResponse.length
             );
-          });
 
-          setState((prev) => ({
-            ...prev,
-            isTyping: false,
-          }));
-        }
-      }, CHUNK_DELAY);
-    }, RESPONSE_START_DELAY);
+            setState((prev) => ({
+              ...prev,
+              messages:
+                prev.messages.map(
+                  (msg) =>
+                    msg.id ===
+                    assistantId
+                      ? {
+                          ...msg,
+                          text:
+                            fullResponse.slice(
+                              0,
+                              index
+                            ),
+                        }
+                      : msg
+                ),
+            }));
+
+            /* ----------------------------------------
+               Response Completed
+            ---------------------------------------- */
+
+            if (
+              index >=
+              fullResponse.length
+            ) {
+              if (
+                streamTimerRef.current !==
+                null
+              ) {
+                window.clearInterval(
+                  streamTimerRef.current
+                );
+
+                streamTimerRef.current =
+                  null;
+              }
+
+              /*
+               * Save the COMPLETE assistant response.
+               * Only the visual presentation was streamed.
+               */
+              void saveChatMessage({
+                sessionId,
+                message: fullResponse,
+                sender: "assistant",
+                messageType:
+                  responseType,
+              }).catch((error) => {
+                console.error(
+                  "Failed to save assistant response:",
+                  error
+                );
+              });
+
+              setState((prev) => ({
+                ...prev,
+                isTyping: false,
+              }));
+            }
+          }, FRAME_DELAY);
+      }, RESPONSE_START_DELAY);
   };
 
-  /* ---------------------------------------- */
-  /* Clear Chat */
-  /* ---------------------------------------- */
+  /* ----------------------------------------
+     Clear Chat
+  ---------------------------------------- */
 
   const clearChat = () => {
+    stopActiveStream();
+
     setState({
       messages: [
         WELCOME_MESSAGE,
