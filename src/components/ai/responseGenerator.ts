@@ -1,7 +1,26 @@
 import { matchIntent } from "./intentMatcher";
 import { getConversationHistory } from "./conversationMemory";
 
-export function generateResponse(message: string): string {
+export type GeneratedResponse = {
+  response: string;
+  isAnswered: boolean;
+};
+
+const UNANSWERED_RESPONSE = `
+I don't currently have enough information in my knowledge base to give you a reliable answer about that.
+
+If your question is related to a project, business requirement, collaboration, or a service you would like to discuss with Pam, I'd be happy to connect you with him.
+
+Please use the contact form below and briefly describe what you need. You can include your name, email, subject, and message, and Pam will get back to you as soon as possible.
+
+👉 [Contact Pam](#contact)
+
+I'm always happy to help you explore the information available in this portfolio.
+`.trim();
+
+export function generateResponseWithStatus(
+  message: string
+): GeneratedResponse {
   const input = message.toLowerCase().trim();
 
   /* ----------------------------------------
@@ -18,7 +37,11 @@ export function generateResponse(message: string): string {
     const history = getConversationHistory();
 
     if (history.length === 0) {
-      return "This is the beginning of our conversation, so I don't have anything to remember yet.";
+      return {
+        response:
+          "This is the beginning of our conversation, so I don't have anything to remember yet.",
+        isAnswered: true,
+      };
     }
 
     const previous = history
@@ -30,7 +53,10 @@ export function generateResponse(message: string): string {
       )
       .join("\n\n");
 
-    return `Here's what we've discussed recently:\n\n${previous}`;
+    return {
+      response: `Here's what we've discussed recently:\n\n${previous}`,
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
@@ -53,7 +79,8 @@ export function generateResponse(message: string): string {
         input.startsWith(`${greeting} `)
     )
   ) {
-    return `
+    return {
+      response: `
 Hello! 👋
 
 Welcome to Pam Sani George's Portfolio.
@@ -72,7 +99,9 @@ I can help you explore:
 • 🚀 Career Goals
 
 How can I help you today?
-`.trim();
+`.trim(),
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
@@ -87,8 +116,13 @@ How can I help you today?
     "how you dey",
   ];
 
-  if (wellbeing.some((item) => input.includes(item))) {
-    return `
+  if (
+    wellbeing.some((item) =>
+      input.includes(item)
+    )
+  ) {
+    return {
+      response: `
 I'm doing great! 😄
 
 Thank you for asking.
@@ -96,7 +130,9 @@ Thank you for asking.
 I'm always ready to help you learn more about Pam Sani George, Smart-P Analytics and his professional journey.
 
 What would you like to know today?
-`.trim();
+`.trim(),
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
@@ -129,7 +165,8 @@ What would you like to know today?
       input.includes(item)
     )
   ) {
-    return `
+    return {
+      response: `
 I'd be happy to help you get in touch with Pam. 🤝
 
 If you'd like to discuss a project, collaboration, data analytics, business intelligence, dashboard development, or another professional opportunity, please use the contact form.
@@ -137,11 +174,13 @@ If you'd like to discuss a project, collaboration, data analytics, business inte
 You can share your requirements and contact details there, and Pam will get back to you as soon as possible.
 
 👉 [Contact Pam](#contact)
-`.trim();
+`.trim(),
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
-     Farewell
+     Farewell / Appreciation
   ---------------------------------------- */
 
   const farewells = [
@@ -160,7 +199,8 @@ You can share your requirements and contact details there, and Pam will get back
         input.startsWith(`${item} `)
     )
   ) {
-    return `
+    return {
+      response: `
 You're most welcome! 😊
 
 Thank you for visiting Pam Sani George's Portfolio.
@@ -168,7 +208,40 @@ Thank you for visiting Pam Sani George's Portfolio.
 It was a pleasure assisting you.
 
 Have a wonderful day, and feel free to come back anytime! 👋
-`.trim();
+`.trim(),
+      isAnswered: true,
+    };
+  }
+
+  /* ----------------------------------------
+     Common conversational acknowledgements
+  ---------------------------------------- */
+
+  const acknowledgements = [
+    "ok",
+    "okay",
+    "alright",
+    "great",
+    "nice",
+    "cool",
+    "sure",
+    "got it",
+    "understood",
+    "sounds good",
+  ];
+
+  if (
+    acknowledgements.some(
+      (item) =>
+        input === item ||
+        input.startsWith(`${item} `)
+    )
+  ) {
+    return {
+      response:
+        "Great! 😊 I'm here whenever you need help exploring Pam Sani George's portfolio.",
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
@@ -178,22 +251,30 @@ Have a wonderful day, and feel free to come back anytime! 👋
   const match = matchIntent(message);
 
   if (match) {
-    return match.response.trim();
+    return {
+      response: match.response.trim(),
+      isAnswered: true,
+    };
   }
 
   /* ----------------------------------------
      Professional AI Fallback
   ---------------------------------------- */
 
-  return `
-I don't currently have enough information in my knowledge base to give you a reliable answer about that.
+  return {
+    response: UNANSWERED_RESPONSE,
+    isAnswered: false,
+  };
+}
 
-If your question is related to a project, business requirement, collaboration, or a service you would like to discuss with Pam, I'd be happy to connect you with him.
-
-Please use the contact form below and briefly describe what you need. You can include your name, email, subject, and message, and Pam will get back to you as soon as possible.
-
-👉 [Contact Pam](#contact)
-
-I'm always happy to help you explore the information available in this portfolio.
-`.trim();
+/**
+ * Backward-compatible response generator.
+ *
+ * Existing code that only needs the response text
+ * can continue using generateResponse().
+ */
+export function generateResponse(
+  message: string
+): string {
+  return generateResponseWithStatus(message).response;
 }

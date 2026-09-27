@@ -8,11 +8,16 @@ import { useAI } from "./AIContext";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import QuickSuggestions from "./QuickSuggestions";
-
 import ResumeCard from "./ResumeCard";
 import CertificateCard from "./CertificateCard";
 
-export default function ChatMessages() {
+type ChatMessagesProps = {
+  onClose?: () => void;
+};
+
+export default function ChatMessages({
+  onClose,
+}: ChatMessagesProps) {
   const { state } = useAI();
 
   const containerRef =
@@ -36,15 +41,16 @@ export default function ChatMessages() {
   useEffect(() => {
     if (!state.isTyping) return;
 
-    const interval = setInterval(() => {
-      bottomRef.current?.scrollIntoView({
-        behavior: "auto",
-        block: "end",
-      });
-    }, 25);
+    const interval =
+      window.setInterval(() => {
+        bottomRef.current?.scrollIntoView({
+          behavior: "auto",
+          block: "end",
+        });
+      }, 40);
 
     return () =>
-      clearInterval(interval);
+      window.clearInterval(interval);
   }, [state.isTyping]);
 
   return (
@@ -54,26 +60,23 @@ export default function ChatMessages() {
         flex-1
         overflow-y-auto
         px-5
-        py-5
+        py-4
         scroll-smooth
       "
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {state.messages.map(
           (message) => (
             <div
               key={message.id}
-              className="space-y-3"
+              className="space-y-2"
             >
               <MessageBubble
                 sender={message.sender}
                 text={message.text}
-                time={
-                  message.timestamp
-                }
+                time={message.timestamp}
+                onClose={onClose}
               />
-
-              {/* Resume Card */}
 
               {message.sender ===
                 "assistant" &&
@@ -85,8 +88,6 @@ export default function ChatMessages() {
                     <ResumeCard />
                   </div>
                 )}
-
-              {/* Certificate Card */}
 
               {message.sender ===
                 "assistant" &&

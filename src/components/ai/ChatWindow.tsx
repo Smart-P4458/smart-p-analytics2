@@ -1,9 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import ChatHeader from "./ChatHeader";
-import WelcomeScreen from "./WelcomeScreen";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
+import WelcomeScreen from "./WelcomeScreen";
 
 type ChatWindowProps = {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export default function ChatWindow({
       {isOpen && (
         <>
           {/* ===================================================== */}
-          {/* Blur Overlay */}
+          {/* Desktop Glassmorphic Backdrop */}
           {/* ===================================================== */}
 
           <motion.div
@@ -27,119 +27,134 @@ export default function ChatWindow({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            onClick={onClose}
             className="
               fixed
               inset-0
               z-[998]
-              bg-slate-950/60
+
+              hidden
+              lg:block
+
+              bg-slate-950/45
               backdrop-blur-md
             "
+            onClick={onClose}
           />
 
           {/* ===================================================== */}
-          {/* Desktop & Tablet */}
+          {/* Desktop Centered Smart-P AI Window */}
           {/* ===================================================== */}
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.95,
-              y: 30,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.95,
-              y: 30,
-            }}
-            transition={{
-              duration: 0.35,
-            }}
+          <div
             className="
-              hidden
-              lg:flex
+              pointer-events-none
 
               fixed
-              left-1/2
-              top-1/2
+              inset-0
               z-[999]
 
-              h-[88vh]
-              max-h-[800px]
+              hidden
+              items-center
+              justify-center
 
-              w-[92vw]
-              max-w-[1000px]
+              p-6
 
-              -translate-x-1/2
-              -translate-y-1/2
-
-              overflow-hidden
-
-              rounded-[32px]
-
-              border
-              border-blue-500/20
-
-              bg-slate-950/95
-
-              shadow-[0_0_80px_rgba(37,99,235,0.18)]
-
-              backdrop-blur-xl
+              lg:flex
             "
           >
-            {/* Left Panel */}
-
-            <aside
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 30,
+                scale: 0.96,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                y: 30,
+                scale: 0.96,
+              }}
+              transition={{
+                duration: 0.3,
+                ease: "easeOut",
+              }}
               className="
+                pointer-events-auto
+
                 flex
-                w-[370px]
-                shrink-0
-                flex-col
 
-                border-r
-                border-slate-800
-
-                bg-gradient-to-b
-                from-slate-950
-                via-slate-950
-                to-slate-900
+                h-[min(720px,90vh)]
+                w-[min(1100px,92vw)]
 
                 overflow-hidden
+                rounded-3xl
+
+                border
+                border-white/10
+
+                bg-slate-950/90
+
+                shadow-[0_25px_100px_rgba(0,0,0,0.55),0_0_80px_rgba(37,99,235,0.15)]
+
+                backdrop-blur-2xl
               "
+              onClick={(event) => event.stopPropagation()}
             >
-              <WelcomeScreen />
-            </aside>
+              {/* ================================================= */}
+              {/* Left Panel */}
+              {/* ================================================= */}
 
-            {/* Right Panel */}
-
-            <section
-              className="
-                flex
-                flex-1
-                flex-col
-
-                overflow-hidden
-              "
-            >
-              <ChatHeader onClose={onClose} />
-
-              <div
+              <aside
                 className="
-                  flex-1
-                  overflow-y-auto
+                  flex
+                  w-[370px]
+                  shrink-0
+                  flex-col
+
+                  overflow-hidden
+
+                  border-r
+                  border-white/10
+
+                  bg-gradient-to-b
+                  from-slate-950/95
+                  via-slate-950/90
+                  to-slate-900/90
+
+                  backdrop-blur-xl
                 "
               >
-                <ChatMessages />
-              </div>
+                <WelcomeScreen />
+              </aside>
 
-              <ChatInput />
-            </section>
-          </motion.div>
+              {/* ================================================= */}
+              {/* Right Panel */}
+              {/* ================================================= */}
+
+              <section
+                className="
+                  flex
+                  min-w-0
+                  flex-1
+                  flex-col
+
+                  overflow-hidden
+
+                  bg-slate-950/70
+                "
+              >
+                <ChatHeader onClose={onClose} />
+
+                <ChatMessages onClose={onClose} />
+
+                <ChatInput />
+              </section>
+            </motion.div>
+          </div>
 
           {/* ===================================================== */}
           {/* Mobile */}
@@ -160,6 +175,7 @@ export default function ChatWindow({
             }}
             transition={{
               duration: 0.35,
+              ease: "easeOut",
             }}
             className="
               fixed
@@ -169,6 +185,8 @@ export default function ChatWindow({
               flex
               flex-col
 
+              overflow-hidden
+
               bg-slate-950
 
               lg:hidden
@@ -176,14 +194,7 @@ export default function ChatWindow({
           >
             <ChatHeader onClose={onClose} />
 
-            <div
-              className="
-                flex-1
-                overflow-y-auto
-              "
-            >
-              <ChatMessages />
-            </div>
+            <ChatMessages onClose={onClose} />
 
             <ChatInput />
           </motion.div>
