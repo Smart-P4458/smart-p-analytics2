@@ -12,7 +12,7 @@ type ProjectCardProps = {
   demo: string;
 };
 
-export default function ProjectCard({
+export default function ProjectsCard({
   title,
   description,
   image,
@@ -25,6 +25,8 @@ export default function ProjectCard({
       variants={fadeUp}
       className="
         group
+        min-w-0
+        w-full
         overflow-hidden
         rounded-b-[28px]
         border
@@ -39,27 +41,26 @@ export default function ProjectCard({
         hover:shadow-blue-500/10
       "
     >
-      {/* ========================= */}
       {/* Project Image */}
-      {/* ========================= */}
 
       <div
         className="
           relative
-          h-64
+          aspect-video
+          w-full
           overflow-hidden
-          rounded-none
           bg-slate-800
         "
       >
         <img
           src={image}
           alt={title}
+          loading="lazy"
           className="
             block
             h-full
             w-full
-            object-fill
+            object-cover
             transition-transform
             duration-500
             group-hover:scale-[1.03]
@@ -78,19 +79,19 @@ export default function ProjectCard({
         />
       </div>
 
-      {/* ========================= */}
       {/* Card Content */}
-      {/* ========================= */}
 
-      <div className="p-8">
+      <div className="p-5 sm:p-6 lg:p-8">
         <h3
           className="
-            text-2xl
+            text-xl
             font-semibold
+            leading-snug
             text-white
             transition-colors
             duration-300
             group-hover:text-blue-400
+            sm:text-2xl
           "
         >
           {title}
@@ -98,24 +99,26 @@ export default function ProjectCard({
 
         <p
           className="
-            mt-5
-            leading-8
+            mt-4
+            leading-7
             text-slate-300
+            sm:mt-5
+            sm:leading-8
           "
         >
           {description}
         </p>
 
-        {/* ========================= */}
         {/* Tech Stack */}
-        {/* ========================= */}
 
         <div
           className="
-            mt-6
+            mt-5
             flex
             flex-wrap
-            gap-3
+            gap-2
+            sm:mt-6
+            sm:gap-3
           "
         >
           {technologies.map((tech) => (
@@ -128,9 +131,10 @@ export default function ProjectCard({
                 bg-blue-500/10
                 px-3
                 py-1
-                text-sm
+                text-xs
                 font-medium
                 text-blue-300
+                sm:text-sm
               "
             >
               {tech}
@@ -138,16 +142,16 @@ export default function ProjectCard({
           ))}
         </div>
 
-        {/* ========================= */}
         {/* Buttons */}
-        {/* ========================= */}
 
         <div
           className="
-            mt-8
+            mt-6
             flex
             flex-wrap
-            gap-4
+            gap-3
+            sm:mt-8
+            sm:gap-4
           "
         >
           <a
@@ -161,14 +165,17 @@ export default function ProjectCard({
               rounded-xl
               border
               border-slate-700
-              px-5
-              py-3
+              px-4
+              py-2.5
+              text-sm
               text-slate-300
               transition-all
               duration-300
               hover:border-blue-500
               hover:bg-blue-500/10
               hover:text-blue-400
+              sm:px-5
+              sm:py-3
             "
           >
             <GitBranch size={18} />
@@ -185,14 +192,17 @@ export default function ProjectCard({
               gap-2
               rounded-xl
               bg-blue-600
-              px-5
-              py-3
+              px-4
+              py-2.5
+              text-sm
               font-medium
               text-white
               transition-all
               duration-300
               hover:scale-105
               hover:bg-blue-700
+              sm:px-5
+              sm:py-3
             "
           >
             <ExternalLink size={18} />
