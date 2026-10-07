@@ -9,7 +9,7 @@ const projects = [
     description:
       "This project analyzes sales performance, profitability trends, and the impact of discounts on profit margins using the Superstore dataset. The goal is to help business leaders identify revenue drivers and optimize discount strategies.",
 
-    image: "./projects/profit-performance-analysis.jpg",
+    image: "/projects/profit-performance-analysis.jpg",
 
     technologies: [
       "Python",
@@ -18,7 +18,8 @@ const projects = [
       "SQL",
     ],
 
-    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
+    github:
+      "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
@@ -28,7 +29,8 @@ const projects = [
     description:
       "Interactive Power BI dashboard providing executive KPIs, customer insights and sales performance analysis.",
 
-    image: "./projects/real-time-retail-sales-analysis-dashboard.png",
+    image:
+      "/projects/real-time-retail-sales-analysis-dashboard.png",
 
     technologies: [
       "Power BI",
@@ -36,17 +38,19 @@ const projects = [
       "Power Query",
     ],
 
-    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
+    github:
+      "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
 
   {
-    title: "Udemy Online course Analysis Dashboard",
+    title: "Udemy Online Course Analysis Dashboard",
     description:
       "Advanced Excel reporting solution featuring PivotTables, dashboards and automated reporting.",
 
-    image: "./projects/Udemy-Online-course-Analysis-Dashboard.jpg",
+    image:
+      "/projects/Udemy-Online-course-Analysis-Dashboard.jpg",
 
     technologies: [
       "Excel",
@@ -54,7 +58,8 @@ const projects = [
       "Analytics",
     ],
 
-    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
+    github:
+      "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
@@ -64,7 +69,8 @@ const projects = [
     description:
       "Responsive personal portfolio built using React, TypeScript and Tailwind CSS showcasing analytics projects and services.",
 
-    image: "./projects/Smart-P-Analytics_Portfolio.jpg",
+    image:
+      "/projects/Smart-P-Analytics_Portfolio.jpg",
 
     technologies: [
       "React",
@@ -72,7 +78,8 @@ const projects = [
       "Tailwind",
     ],
 
-    github: "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
+    github:
+      "https://github.com/Smart-P4458/Profit-Performance-and-Discount-Optimization-Dashboard",
 
     demo: "#",
   },
@@ -84,7 +91,11 @@ export default function ProjectsGrid() {
       variants={staggerContainer}
       className="
         grid
-        gap-8
+        w-full
+        min-w-0
+        grid-cols-1
+        gap-6
+        sm:gap-8
         lg:grid-cols-2
       "
     >
