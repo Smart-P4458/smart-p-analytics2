@@ -37,23 +37,26 @@ const WELCOME_MESSAGE: Message = {
  * Smart-P AI response animation settings
  *
  * RESPONSE_START_DELAY:
- * Small pause before the assistant begins responding.
+ * Natural pause before Smart-P AI begins responding.
  *
  * TARGET_STREAM_DURATION:
- * Approximate maximum time a normal response should spend
- * visibly streaming.
- *
- * MIN_CHUNK_SIZE / MAX_CHUNK_SIZE:
- * Control how many characters appear during each update.
+ * Approximate time used to visibly present a normal response.
  *
  * FRAME_DELAY:
- * Controls how frequently the visible text is refreshed.
+ * Controls how often the visible response is updated.
+ *
+ * MIN_CHUNK_SIZE / MAX_CHUNK_SIZE:
+ * Controls how many characters appear during each update.
+ *
+ * These values are intentionally slower than the previous
+ * configuration to create a more natural conversational rhythm.
  */
-const RESPONSE_START_DELAY = 180;
-const TARGET_STREAM_DURATION = 1100;
-const FRAME_DELAY = 16;
-const MIN_CHUNK_SIZE = 6;
-const MAX_CHUNK_SIZE = 24;
+
+const RESPONSE_START_DELAY = 350;
+const TARGET_STREAM_DURATION = 2600;
+const FRAME_DELAY = 45;
+const MIN_CHUNK_SIZE = 2;
+const MAX_CHUNK_SIZE = 8;
 
 export function AIProvider({
   children,
@@ -66,8 +69,9 @@ export function AIProvider({
   /*
    * Keeps track of the active response animation.
    * This prevents old animations from continuing after
-   * the chat has been cleared.
+   * the chat has been cleared or a new message is sent.
    */
+
   const streamTimerRef = useRef<number | null>(null);
   const responseDelayRef = useRef<number | null>(null);
 
@@ -92,6 +96,7 @@ export function AIProvider({
      * Prevent a previous unfinished animation from
      * interfering with the next response.
      */
+
     stopActiveStream();
 
     const sessionId = getSessionId();
@@ -181,10 +186,10 @@ export function AIProvider({
     /*
      * Calculate the streaming chunk dynamically.
      *
-     * Short answers still appear naturally.
-     * Long answers automatically receive larger chunks,
-     * preventing them from taking several seconds.
+     * The slower frame interval and smaller chunks
+     * create a more natural conversational typing rhythm.
      */
+
     const estimatedFrames = Math.max(
       1,
       Math.floor(
@@ -281,6 +286,7 @@ export function AIProvider({
                * Save the COMPLETE assistant response.
                * Only the visual presentation was streamed.
                */
+
               void saveChatMessage({
                 sessionId,
                 message: fullResponse,
